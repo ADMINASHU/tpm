@@ -1,50 +1,68 @@
 "use client";
 
-import { useState } from "react";
-import { CopyPlus, FileText, CheckCircle2, ChevronRight } from "lucide-react";
+import { useState, useEffect, Suspense } from "react";
+import { useSearchParams } from "next/navigation";
+import { CopyPlus, FileText, CheckCircle2 } from "lucide-react";
 
-export default function ProcurementPage() {
-    const [activeTab, setActiveTab] = useState("indent");
+const PAGE_HEADERS = {
+    indent: { title: "Create Indent", subtitle: "Raise material requisitions for components reaching minimum buffer levels." },
+    po: { title: "PO Gen & Approvals", subtitle: "Review approved indents and generate purchase orders from vendor catalogs." },
+    suppliers: { title: "Supplier Config", subtitle: "Manage approved vendor list, contacts, and supply categories." },
+};
+
+function ProcurementContent() {
+    const searchParams = useSearchParams();
+    const tabFromUrl = searchParams.get("tab") || "indent";
+    const [activeTab, setActiveTab] = useState(tabFromUrl);
+
+    useEffect(() => {
+        if (["indent", "po", "suppliers"].includes(tabFromUrl)) setActiveTab(tabFromUrl);
+    }, [tabFromUrl]);
+
+    const { title, subtitle } = PAGE_HEADERS[activeTab] || PAGE_HEADERS.indent;
 
     return (
         <div className="flex-1 p-8">
             <div className="max-w-6xl mx-auto space-y-8">
                 <div>
-                    <h1 className="text-3xl font-bold tracking-tight text-slate-900">Procurement & Vendors</h1>
-                    <p className="text-slate-500 mt-2 text-sm font-medium">
-                        Manage strict "No Indent, No PO" workflows, vendor lists, and product indenting.
-                    </p>
+                    <h1 className="text-3xl font-bold tracking-tight text-slate-900">{title}</h1>
+                    <p className="text-slate-500 mt-2 text-sm font-medium">{subtitle}</p>
                 </div>
 
-                {/* Tabs */}
-                <div className="flex space-x-1 p-1 bg-slate-200/50 rounded-xl w-fit">
+                {/* Tab switcher — mobile only, desktop uses navbar dropdown */}
+                <div className="md:hidden flex space-x-1 p-1 bg-slate-200/50 rounded-xl w-fit">
                     <button
                         onClick={() => setActiveTab("indent")}
                         className={`px-6 py-2.5 text-sm font-semibold rounded-lg transition-all ${activeTab === "indent"
-                                ? "bg-white text-indigo-700 shadow-sm ring-1 ring-slate-200"
-                                : "text-slate-500 hover:text-slate-700 hover:bg-slate-200/50"
+                            ? "bg-white text-indigo-700 shadow-sm ring-1 ring-slate-200"
+                            : "text-slate-500 hover:text-slate-700 hover:bg-slate-200/50"
                             }`}
                     >
                         Create Indent
                     </button>
                     <button
-                        onClick={() => setActiveTab("approval")}
-                        className={`px-6 py-2.5 text-sm font-semibold rounded-lg transition-all ${activeTab === "approval"
-                                ? "bg-white text-indigo-700 shadow-sm ring-1 ring-slate-200"
-                                : "text-slate-500 hover:text-slate-700 hover:bg-slate-200/50"
+                        onClick={() => setActiveTab("po")}
+                        className={`px-6 py-2.5 text-sm font-semibold rounded-lg transition-all ${activeTab === "po"
+                            ? "bg-white text-indigo-700 shadow-sm ring-1 ring-slate-200"
+                            : "text-slate-500 hover:text-slate-700 hover:bg-slate-200/50"
                             }`}
                     >
                         PO Gen & Approvals
                     </button>
                 </div>
 
-                {/* Tab Content */}
                 <div className="bg-white rounded-2xl shadow-sm border border-slate-100 p-8">
-                    {activeTab === "indent" ? <IndentCreation /> : <POApproval />}
+                    {activeTab === "indent" && <IndentCreation />}
+                    {activeTab === "po" && <POApproval />}
+                    {activeTab === "suppliers" && <SupplierConfig />}
                 </div>
             </div>
         </div>
     );
+}
+
+export default function ProcurementPage() {
+    return <Suspense><ProcurementContent /></Suspense>;
 }
 
 function IndentCreation() {
@@ -141,6 +159,68 @@ function POApproval() {
                     </tbody>
                 </table>
             </div>
+        </div>
+    );
+}
+
+function SupplierConfig() {
+    const [showForm, setShowForm] = useState(false);
+    const suppliers = [
+        { name: "Acme Corp", category: "Electronic Components", contact: "acme@supply.com", rating: 5, status: "Approved" },
+        { name: "Global Tech", category: "PCB & Assemblies", contact: "gt@global.com", rating: 4, status: "Approved" },
+        { name: "Electro Components", category: "Passive Components", contact: "info@electro.in", rating: 3, status: "On Hold" },
+        { name: "Packrite Ltd", category: "Packaging Materials", contact: "pack@packrite.com", rating: 4, status: "Approved" },
+    ];
+    const stars = (n) => "★".repeat(n) + "☆".repeat(5 - n);
+    const statusColor = { Approved: "bg-emerald-100 text-emerald-700", "On Hold": "bg-amber-100 text-amber-700" };
+
+    return (
+        <div className="space-y-6">
+            <div className="flex items-center justify-between">
+                <h2 className="text-lg font-bold text-slate-900">Approved Suppliers</h2>
+                <button onClick={() => setShowForm(!showForm)}
+                    className="flex items-center gap-2 rounded-xl bg-indigo-600 px-4 py-2 text-sm font-bold text-white hover:bg-indigo-500 transition-all shadow-sm">
+                    + Add Supplier
+                </button>
+            </div>
+
+            {showForm && (
+                <div className="bg-slate-50 border border-slate-200 rounded-2xl p-6 space-y-4">
+                    <h3 className="text-sm font-bold text-slate-700">New Supplier</h3>
+                    <div className="grid grid-cols-2 gap-4">
+                        <input type="text" placeholder="Supplier Name" className="block w-full rounded-xl border-0 py-2.5 px-3 text-sm shadow-sm ring-1 ring-inset ring-slate-200 focus:ring-2 focus:ring-indigo-600" />
+                        <input type="text" placeholder="Category (e.g. PCB & Assemblies)" className="block w-full rounded-xl border-0 py-2.5 px-3 text-sm shadow-sm ring-1 ring-inset ring-slate-200 focus:ring-2 focus:ring-indigo-600" />
+                        <input type="email" placeholder="Contact Email" className="block w-full rounded-xl border-0 py-2.5 px-3 text-sm shadow-sm ring-1 ring-inset ring-slate-200 focus:ring-2 focus:ring-indigo-600" />
+                        <input type="text" placeholder="Phone / GST No." className="block w-full rounded-xl border-0 py-2.5 px-3 text-sm shadow-sm ring-1 ring-inset ring-slate-200 focus:ring-2 focus:ring-indigo-600" />
+                    </div>
+                    <div className="flex justify-end gap-3">
+                        <button onClick={() => setShowForm(false)} className="px-4 py-2 text-sm font-semibold text-slate-600 hover:bg-slate-100 rounded-xl">Cancel</button>
+                        <button className="px-5 py-2 text-sm font-bold text-white bg-indigo-600 hover:bg-indigo-500 rounded-xl">Save Supplier</button>
+                    </div>
+                </div>
+            )}
+
+            <table className="w-full text-sm">
+                <thead>
+                    <tr className="text-left text-xs font-bold text-slate-400 uppercase tracking-wider border-b border-slate-100">
+                        <th className="pb-3">Supplier</th><th className="pb-3">Category</th>
+                        <th className="pb-3">Contact</th><th className="pb-3">Rating</th><th className="pb-3">Status</th>
+                    </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-50">
+                    {suppliers.map((s) => (
+                        <tr key={s.name} className="hover:bg-slate-50 transition-colors">
+                            <td className="py-3.5 font-bold text-slate-900">{s.name}</td>
+                            <td className="py-3.5 text-slate-500 text-xs">{s.category}</td>
+                            <td className="py-3.5 text-slate-500">{s.contact}</td>
+                            <td className="py-3.5 text-amber-500 font-semibold tracking-tight text-xs">{stars(s.rating)}</td>
+                            <td className="py-3.5">
+                                <span className={`text-xs font-bold px-2.5 py-1 rounded-full ${statusColor[s.status]}`}>{s.status}</span>
+                            </td>
+                        </tr>
+                    ))}
+                </tbody>
+            </table>
         </div>
     );
 }
