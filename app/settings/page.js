@@ -73,6 +73,8 @@ function savePrefs(prefs) {
 
 // ── Main Page ────────────────────────────────────────────────
 export default function SettingsPage() {
+    const [prefs, setPrefs] = useState(DEFAULTS);
+    const [saved, setSaved] = useState(false);
     const savedTimerRef = useRef(null);
 
     useEffect(() => {

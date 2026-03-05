@@ -10,7 +10,7 @@ export default function Footer() {
 
     return (
         <footer className="w-full bg-white border-t border-slate-100 py-3 px-6 mt-auto">
-            <div className="max-w-7xl mx-auto flex justify-between items-center text-xs text-slate-500 font-medium">
+            <div className="max-w-[1600px] mx-auto flex justify-between items-center text-xs text-slate-500 font-medium">
                 {/* Left — Active Factory */}
                 <div className="flex items-center space-x-2">
                     <Info className="w-4 h-4 text-indigo-600" />

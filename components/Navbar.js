@@ -13,6 +13,7 @@ import {
 } from "lucide-react";
 import clsx from "clsx";
 import { useState, useRef, useEffect } from "react";
+import Logo from "./Logo";
 
 const navItems = [
     { name: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
@@ -56,6 +57,14 @@ const navItems = [
         children: [
             { name: "AP Aging", href: "/finance?tab=aging", icon: BarChart2 },
             { name: "Ledger Book", href: "/finance?tab=ledger", icon: BookOpenCheck },
+        ],
+    },
+    {
+        name: "Setup", href: "/setup", icon: SlidersHorizontal,
+        children: [
+            { name: "Factory Config", href: "/setup?tab=factory", icon: Factory },
+            { name: "Users & Roles", href: "/setup?tab=users", icon: UserCircle2 },
+            { name: "System Info", href: "/setup?tab=system", icon: Info },
         ],
     },
 ];
@@ -106,27 +115,12 @@ function AvatarMenu({ session }) {
                         </div>
                     </div>
 
-                    {/* Guide + Setup Section */}
+                    {/* Guide & Preferences Section */}
                     <div className="py-1">
                         <Link href="/guide" onClick={() => setOpen(false)}
                             className="flex items-center gap-2.5 px-4 py-2 text-sm text-slate-600 hover:bg-indigo-50 hover:text-indigo-700 transition-colors">
                             <BookOpen className="w-4 h-4 text-slate-400" />
                             User Guide
-                        </Link>
-                        <Link href="/setup?tab=factory" onClick={() => setOpen(false)}
-                            className="flex items-center gap-2.5 px-4 py-2 text-sm text-slate-600 hover:bg-indigo-50 hover:text-indigo-700 transition-colors">
-                            <Factory className="w-4 h-4 text-slate-400" />
-                            Factory Config
-                        </Link>
-                        <Link href="/setup?tab=users" onClick={() => setOpen(false)}
-                            className="flex items-center gap-2.5 px-4 py-2 text-sm text-slate-600 hover:bg-indigo-50 hover:text-indigo-700 transition-colors">
-                            <UserCircle2 className="w-4 h-4 text-slate-400" />
-                            Users & Roles
-                        </Link>
-                        <Link href="/setup?tab=system" onClick={() => setOpen(false)}
-                            className="flex items-center gap-2.5 px-4 py-2 text-sm text-slate-600 hover:bg-indigo-50 hover:text-indigo-700 transition-colors">
-                            <Info className="w-4 h-4 text-slate-400" />
-                            System Info
                         </Link>
                         <Link href="/settings" onClick={() => setOpen(false)}
                             className="flex items-center gap-2.5 px-4 py-2 text-sm text-slate-600 hover:bg-indigo-50 hover:text-indigo-700 transition-colors">
@@ -295,26 +289,6 @@ function MobileDrawer({ open, onClose, pathname }) {
                         );
                     })}
 
-                    {/* Setup section */}
-                    <div className="pt-2 mt-2 border-t border-slate-100">
-                        <p className="px-4 py-1 text-xs font-bold text-slate-400 uppercase tracking-widest">Setup</p>
-                        {[
-                            { name: "Factory Config", href: "/setup?tab=factory", icon: Building },
-                            { name: "Users & Roles", href: "/setup?tab=users", icon: Users },
-                            { name: "System Info", href: "/setup?tab=system", icon: Info },
-                            { name: "System Preferences", href: "/settings", icon: SlidersHorizontal },
-                        ].map(({ name, href, icon: Icon }) => (
-                            <Link
-                                key={href}
-                                href={href}
-                                onClick={onClose}
-                                className="flex items-center gap-3 px-4 py-2.5 rounded-xl text-sm font-semibold text-slate-600 hover:bg-slate-50 hover:text-indigo-600 transition-all"
-                            >
-                                <Icon className="w-4 h-4 shrink-0" />
-                                {name}
-                            </Link>
-                        ))}
-                    </div>
                 </div>
             </div>
         </>
@@ -331,7 +305,7 @@ export default function Navbar() {
     return (
         <>
             <nav className="sticky top-0 z-50 w-full bg-white/80 backdrop-blur-md border-b border-slate-200 shadow-sm">
-                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                <div className="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8">
                     <div className="flex items-center justify-between h-16">
 
                         {/* Left — Hamburger (mobile only) + Logo */}
@@ -343,9 +317,7 @@ export default function Navbar() {
                             >
                                 <Menu className="w-5 h-5" />
                             </button>
-                            <span className="text-xl font-bold bg-gradient-to-r from-indigo-600 to-indigo-400 bg-clip-text text-transparent">
-                                Techser ERP
-                            </span>
+                            <Logo />
                         </div>
 
                         {/* Right — Desktop nav links + Avatar */}
