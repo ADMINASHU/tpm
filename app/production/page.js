@@ -2,7 +2,7 @@
 
 import { useState, useEffect, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
-import { Wrench, Search, ArrowRight, QrCode, Database } from "lucide-react";
+import { Wrench, Search, ArrowRight, QrCode, Database, ChevronRight, LayoutDashboard } from "lucide-react";
 
 const PAGE_HEADERS = {
   build: {
@@ -55,13 +55,14 @@ function ProductionContent() {
   const { title, subtitle } = PAGE_HEADERS[activeTab] || PAGE_HEADERS.build;
 
   return (
-    <div className="flex-1 p-8">
-      <div className="max-w-6xl mx-auto space-y-8">
-        <div>
-          <h1 className="text-3xl font-bold tracking-tight text-slate-900">
-            {title}
-          </h1>
-          <p className="text-slate-500 mt-2 text-sm font-medium">{subtitle}</p>
+    <div className="flex-1 p-4 md:py-6 md:px-8">
+      <div className="max-w-[1600px] mx-auto space-y-4 md:space-y-6">
+        <div className="flex items-center text-sm font-medium text-slate-600 bg-white border border-slate-200 px-4 py-2.5 rounded-xl shadow-sm w-fit">
+          <LayoutDashboard className="w-4 h-4 text-slate-400" />
+          <ChevronRight className="w-4 h-4 text-slate-300 mx-1.5" />
+          <span className="hover:text-slate-900 cursor-pointer transition-colors">Production</span>
+          <ChevronRight className="w-4 h-4 text-slate-300 mx-1.5" />
+          <span className="font-bold text-indigo-700" title={subtitle}>{title}</span>
         </div>
 
         {/* Tab switcher — mobile only */}
@@ -87,7 +88,7 @@ function ProductionContent() {
           ))}
         </div>
 
-        <div className="bg-white rounded-2xl shadow-sm border border-slate-100 p-8">
+        <div className="bg-white rounded-xl shadow-sm border border-slate-100 p-4 md:p-6">
           {activeTab === "build" && <NewBuild />}
           {activeTab === "bom" && <BOMConfig />}
           {activeTab === "genealogy" && <GenealogyTrace />}
@@ -1168,7 +1169,7 @@ function ComponentConfig() {
   });
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4">
       {/* Hidden CSV File Input */}
       <input
         type="file"
@@ -1996,43 +1997,43 @@ function ComponentConfig() {
         <thead className="bg-slate-50">
           <tr className="text-left text-xs font-bold text-slate-500 uppercase tracking-wider border-b border-slate-200">
             {visibleColumns.itemCode && (
-              <th className="py-3 px-4">Item Code</th>
+              <th className="py-2 px-3">Item Code</th>
             )}
 
             {mergeDescMake &&
               (visibleColumns.itemName ||
                 visibleColumns.make ||
                 visibleColumns.description) && (
-                <th className="py-3 px-4">Component Profile</th>
+                <th className="py-2 px-3">Component Profile</th>
               )}
 
             {!mergeDescMake && visibleColumns.itemName && (
-              <th className="py-3 px-4">Item Name</th>
+              <th className="py-2 px-3">Item Name</th>
             )}
             {!mergeDescMake && visibleColumns.description && (
-              <th className="py-3 px-4">Description</th>
+              <th className="py-2 px-3">Description</th>
             )}
             {!mergeDescMake && visibleColumns.make && (
-              <th className="py-3 px-4">Make</th>
+              <th className="py-2 px-3">Make</th>
             )}
 
-            {visibleColumns.category && <th className="py-3 px-4">Category</th>}
+            {visibleColumns.category && <th className="py-2 px-3">Category</th>}
             {visibleColumns.trackingType && (
-              <th className="py-3 px-4">Tracking</th>
+              <th className="py-2 px-3">Tracking</th>
             )}
-            {visibleColumns.baseUom && <th className="py-3 px-4">UOM</th>}
-            {visibleColumns.hsnCode && <th className="py-3 px-4">HSN</th>}
+            {visibleColumns.baseUom && <th className="py-2 px-3">UOM</th>}
+            {visibleColumns.hsnCode && <th className="py-2 px-3">HSN</th>}
             {visibleColumns.mountingTechnology && (
-              <th className="py-3 px-4">Mounting</th>
+              <th className="py-2 px-3">Mounting</th>
             )}
             {visibleColumns.bufferLevels && (
-              <th className="py-3 px-4">Min / Max Buffer</th>
+              <th className="py-2 px-3">Min / Max Buffer</th>
             )}
             {visibleColumns.techSpecs && (
-              <th className="py-3 px-4">Technical Specs</th>
+              <th className="py-2 px-3">Technical Specs</th>
             )}
 
-            <th className="py-3 px-4 text-right">Actions</th>
+            <th className="py-2 px-3 text-right">Actions</th>
           </tr>
         </thead>
         <tbody className="divide-y divide-slate-100 bg-white">
@@ -2059,7 +2060,7 @@ function ComponentConfig() {
                 className="hover:bg-slate-50 transition-colors"
               >
                 {visibleColumns.itemCode && (
-                  <td className="py-3 px-4 font-mono font-bold text-indigo-600">
+                  <td className="py-2 px-3 font-mono font-bold text-indigo-600">
                     {item.itemCode}
                   </td>
                 )}
@@ -2068,7 +2069,7 @@ function ComponentConfig() {
                   (visibleColumns.itemName ||
                     visibleColumns.make ||
                     visibleColumns.description) && (
-                    <td className="py-3 px-4">
+                    <td className="py-2 px-3">
                       {visibleColumns.itemName && (
                         <div className="font-semibold text-slate-900">
                           {item.itemName}
@@ -2088,29 +2089,29 @@ function ComponentConfig() {
                   )}
 
                 {!mergeDescMake && visibleColumns.itemName && (
-                  <td className="py-3 px-4 font-semibold text-slate-900">
+                  <td className="py-2 px-3 font-semibold text-slate-900">
                     {item.itemName}
                   </td>
                 )}
                 {!mergeDescMake && visibleColumns.description && (
-                  <td className="py-3 px-4 text-xs text-slate-500 uppercase">
+                  <td className="py-2 px-3 text-xs text-slate-500 uppercase">
                     {item.description}
                   </td>
                 )}
                 {!mergeDescMake && visibleColumns.make && (
-                  <td className="py-3 px-4 text-xs text-indigo-600 uppercase font-bold">
+                  <td className="py-2 px-3 text-xs text-indigo-600 uppercase font-bold">
                     {item.make}
                   </td>
                 )}
 
                 {visibleColumns.category && (
-                  <td className="py-3 px-4 text-slate-500 text-xs font-medium uppercase">
+                  <td className="py-2 px-3 text-slate-500 text-xs font-medium uppercase">
                     {item.category}
                   </td>
                 )}
 
                 {visibleColumns.trackingType && (
-                  <td className="py-3 px-4">
+                  <td className="py-2 px-3">
                     <span
                       className={`text-[10px] font-bold rounded px-2 py-1 w-max inline-block uppercase ${item.trackingType === "Serialized" ? "bg-indigo-50 text-indigo-600" : "bg-slate-50 text-slate-500"}`}
                     >
@@ -2120,19 +2121,19 @@ function ComponentConfig() {
                 )}
 
                 {visibleColumns.baseUom && (
-                  <td className="py-3 px-4 text-slate-500 text-xs uppercase">
+                  <td className="py-2 px-3 text-slate-500 text-xs uppercase">
                     {item.baseUom}
                   </td>
                 )}
 
                 {visibleColumns.hsnCode && (
-                  <td className="py-3 px-4 text-slate-500 text-xs font-mono">
+                  <td className="py-2 px-3 text-slate-500 text-xs font-mono">
                     {item.hsnCode || "-"}
                   </td>
                 )}
 
                 {visibleColumns.mountingTechnology && (
-                  <td className="py-3 px-4">
+                  <td className="py-2 px-3">
                     <span className="text-[10px] bg-amber-50 text-amber-700 px-2 py-1 rounded font-bold uppercase">
                       {item.mountingTechnology || "N/A"}
                     </span>
@@ -2140,7 +2141,7 @@ function ComponentConfig() {
                 )}
 
                 {visibleColumns.bufferLevels && (
-                  <td className="py-3 px-4">
+                  <td className="py-2 px-3">
                     <span className="text-red-500 font-bold">
                       {item.minStockLevel || 0}
                     </span>{" "}
@@ -2152,7 +2153,7 @@ function ComponentConfig() {
                 )}
 
                 {visibleColumns.techSpecs && (
-                  <td className="py-3 px-4">
+                  <td className="py-2 px-3">
                     <div className="flex flex-wrap gap-1">
                       {item.technicalSpecs &&
                         Object.entries(item.technicalSpecs)
@@ -2174,7 +2175,7 @@ function ComponentConfig() {
                     </div>
                   </td>
                 )}
-                <td className="py-3 px-4 text-right">
+                <td className="py-2 px-3 text-right">
                   <div className="flex justify-end gap-2">
                     <button
                       onClick={() => handleEdit(item)}
