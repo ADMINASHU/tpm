@@ -635,6 +635,26 @@ function ComponentConfig() {
   const [itemsList, setItemsList] = useState([]);
   const [isLoadingItems, setIsLoadingItems] = useState(true);
 
+  // Table View Enhancements State
+  const [searchTerm, setSearchTerm] = useState("");
+  const [showColumnConfig, setShowColumnConfig] = useState(false);
+  const [visibleColumns, setVisibleColumns] = useState({
+    itemCode: true,
+    itemName: true,
+    description: true,
+    make: true,
+    category: true,
+    trackingType: true,
+    baseUom: true,
+    hsnCode: false,
+    mountingTechnology: false,
+    bufferLevels: true,
+    techSpecs: false,
+  });
+
+  const [showSettings, setShowSettings] = useState(false);
+  const [mergeDescMake, setMergeDescMake] = useState(true);
+
   const fetchItems = async () => {
     setIsLoadingItems(true);
     try {
@@ -934,6 +954,54 @@ function ComponentConfig() {
     }
   };
 
+  const handleEdit = (item) => {
+    setIsEditing(true);
+    setEditingId(item._id);
+    setFormData({
+      itemCode: item.itemCode || "",
+      itemName: item.itemName || "",
+      category: item.category || "",
+      make: item.make || "",
+      description: item.description || "",
+      baseUom: item.baseUom || "",
+      hsnCode: item.hsnCode || "",
+      trackingType: item.trackingType || "Bulk",
+      mountingTechnology: item.mountingTechnology || "THT",
+      minBufferLevel: item.minStockLevel?.toString() || "",
+      maxBufferLevel: item.maxStockLevel?.toString() || "",
+    });
+
+    if (item.technicalSpecs) {
+      const specs = Object.entries(item.technicalSpecs).map(
+        ([name, value]) => ({
+          name,
+          value,
+        }),
+      );
+      setTechSpecs(specs.length > 0 ? specs : [{ name: "Value", value: "" }]);
+    } else {
+      setTechSpecs([{ name: "Value", value: "" }]);
+    }
+    setShowForm(true);
+  };
+
+  const handleDelete = async (id) => {
+    if (!confirm("Are you sure you want to delete this component?")) return;
+    try {
+      const res = await fetch(`/api/production/items?id=${id}`, {
+        method: "DELETE",
+      });
+      const json = await res.json();
+      if (json.success) {
+        fetchItems();
+      } else {
+        alert(json.error || "Delete failed");
+      }
+    } catch {
+      alert("Network error");
+    }
+  };
+
   // --- CSV Import Handlers ---
   const CSV_HEADERS = [
     "itemCode",
@@ -1053,6 +1121,19 @@ function ComponentConfig() {
     URL.revokeObjectURL(url);
   };
 
+  const filteredItems = itemsList.filter((item) => {
+    const s = searchTerm.toLowerCase();
+    return (
+      item.itemCode?.toLowerCase().includes(s) ||
+      item.itemName?.toLowerCase().includes(s) ||
+      item.category?.toLowerCase().includes(s) ||
+      item.description?.toLowerCase().includes(s) ||
+      item.make?.toLowerCase().includes(s) ||
+      item.hsnCode?.toLowerCase().includes(s) ||
+      item.mountingTechnology?.toLowerCase().includes(s)
+    );
+  });
+
   return (
     <div className="space-y-6">
       {/* Hidden CSV File Input */}
@@ -1143,7 +1224,7 @@ function ComponentConfig() {
       </p>
 
       {showForm && (
-        <div className="fixed inset-0 z-[999] flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-sm overflow-y-auto">
+        <div className="fixed inset-0 z-999 flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-sm overflow-y-auto">
           <div className="bg-slate-50 border border-slate-200 rounded-2xl p-6 w-full max-w-6xl shadow-2xl my-8">
             <div className="flex justify-between items-center border-b border-slate-200 pb-4 mb-6">
               <h3 className="text-lg font-bold text-slate-900">
@@ -1783,80 +1864,283 @@ function ComponentConfig() {
         </div>
       )}
 
+      <div className="flex items-center justify-between gap-4 mt-4">
+        <div className="relative flex-1">
+          <input
+            type="text"
+            placeholder="Search components..."
+            className="w-full pl-10 pr-4 py-2 text-sm border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+          />
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            width="16"
+            height="16"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"
+          >
+            <circle cx="11" cy="11" r="8"></circle>
+            <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+          </svg>
+        </div>
+
+        <div className="relative">
+          <button
+            onClick={() => setShowSettings(!showSettings)}
+            className="flex items-center gap-2 px-4 py-2 text-sm font-semibold text-slate-600 bg-white border border-slate-200 rounded-xl hover:bg-slate-50 transition-colors"
+          >
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              width="16"
+              height="16"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            >
+              <path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.78 1.35a2 2 0 0 0 .73 2.73l.15.08a2 2 0 0 1 1 1.73v.44a2 2 0 0 1-1 1.73l-.15.08a2 2 0 0 0-.73 2.73l.78 1.35a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.78-1.35a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.73v-.44a2 2 0 0 1 1-1.73l.15-.08a2 2 0 0 0 .73-2.73l-.78-1.35a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"></path>
+              <circle cx="12" cy="12" r="3"></circle>
+            </svg>
+            Settings
+          </button>
+
+          {showSettings && (
+            <div className="absolute right-0 mt-2 w-64 bg-white border border-slate-200 rounded-xl shadow-lg z-10 p-4">
+              <div className="mb-3">
+                <label className="flex items-center text-sm font-medium text-slate-700">
+                  <input
+                    type="checkbox"
+                    checked={mergeDescMake}
+                    onChange={() => setMergeDescMake(!mergeDescMake)}
+                    className="mr-2 rounded border-slate-300 text-indigo-600 shadow-sm focus:ring-indigo-500"
+                  />
+                  Merge Description & Make
+                </label>
+                <p className="text-xs text-slate-500 ml-5">
+                  Combines item name, description, and make into one column.
+                </p>
+              </div>
+              <div className="border-t border-slate-100 pt-3">
+                <p className="text-xs font-semibold text-slate-500 mb-2">
+                  Visible Columns
+                </p>
+                {Object.keys(visibleColumns).map((col) => (
+                  <label
+                    key={col}
+                    className="flex items-center text-sm text-slate-700 mb-1"
+                  >
+                    <input
+                      type="checkbox"
+                      checked={visibleColumns[col]}
+                      onChange={() =>
+                        setVisibleColumns((prev) => ({
+                          ...prev,
+                          [col]: !prev[col],
+                        }))
+                      }
+                      className="mr-2 rounded border-slate-300 text-indigo-600 shadow-sm focus:ring-indigo-500"
+                    />
+                    {col
+                      .replace(/([A-Z])/g, " $1")
+                      .replace(/^./, (str) => str.toUpperCase())}
+                  </label>
+                ))}
+              </div>
+            </div>
+          )}
+        </div>
+      </div>
+
       <table className="w-full text-sm mt-4 border border-slate-100 rounded-xl overflow-hidden">
         <thead className="bg-slate-50">
           <tr className="text-left text-xs font-bold text-slate-500 uppercase tracking-wider border-b border-slate-200">
-            <th className="py-3 px-4">Item Code</th>
-            <th className="py-3 px-4">Description / Make</th>
-            <th className="py-3 px-4">Category</th>
-            <th className="py-3 px-4">Tracking</th>
-            <th className="py-3 px-4">Min / Max Buffer</th>
+            {visibleColumns.itemCode && (
+              <th className="py-3 px-4">Item Code</th>
+            )}
+
+            {mergeDescMake &&
+              (visibleColumns.itemName ||
+                visibleColumns.make ||
+                visibleColumns.description) && (
+                <th className="py-3 px-4">Component Profile</th>
+              )}
+
+            {!mergeDescMake && visibleColumns.itemName && (
+              <th className="py-3 px-4">Item Name</th>
+            )}
+            {!mergeDescMake && visibleColumns.description && (
+              <th className="py-3 px-4">Description</th>
+            )}
+            {!mergeDescMake && visibleColumns.make && (
+              <th className="py-3 px-4">Make</th>
+            )}
+
+            {visibleColumns.category && <th className="py-3 px-4">Category</th>}
+            {visibleColumns.trackingType && (
+              <th className="py-3 px-4">Tracking</th>
+            )}
+            {visibleColumns.baseUom && <th className="py-3 px-4">UOM</th>}
+            {visibleColumns.hsnCode && <th className="py-3 px-4">HSN</th>}
+            {visibleColumns.mountingTechnology && (
+              <th className="py-3 px-4">Mounting</th>
+            )}
+            {visibleColumns.bufferLevels && (
+              <th className="py-3 px-4">Min / Max Buffer</th>
+            )}
+            {visibleColumns.techSpecs && (
+              <th className="py-3 px-4">Technical Specs</th>
+            )}
+
             <th className="py-3 px-4 text-right">Actions</th>
           </tr>
         </thead>
         <tbody className="divide-y divide-slate-100 bg-white">
           {isLoadingItems ? (
             <tr>
-              <td colSpan="6" className="py-12 text-center text-slate-400">
+              <td colSpan="12" className="py-12 text-center text-slate-400">
                 <div className="flex flex-col items-center gap-2">
                   <div className="w-6 h-6 border-2 border-indigo-600 border-t-transparent rounded-full animate-spin"></div>
                   <p className="text-xs font-medium">Loading components...</p>
                 </div>
               </td>
             </tr>
-          ) : itemsList.length === 0 ? (
+          ) : filteredItems.length === 0 ? (
             <tr>
-              <td colSpan="6" className="py-12 text-center text-slate-400">
+              <td colSpan="12" className="py-12 text-center text-slate-400">
                 <p className="text-sm font-medium">No components found.</p>
-                <p className="text-xs">
-                  Add your first component or import a CSV kit.
-                </p>
+                <p className="text-xs">Try adjusting your search or filters.</p>
               </td>
             </tr>
           ) : (
-            itemsList.map((item) => (
+            filteredItems.map((item) => (
               <tr
                 key={item._id}
                 className="hover:bg-slate-50 transition-colors"
               >
-                <td className="py-3 px-4 font-mono font-bold text-indigo-600">
-                  {item.itemCode}
-                </td>
-                <td className="py-3 px-4">
-                  <div className="font-semibold text-slate-900">
+                {visibleColumns.itemCode && (
+                  <td className="py-3 px-4 font-mono font-bold text-indigo-600">
+                    {item.itemCode}
+                  </td>
+                )}
+
+                {mergeDescMake &&
+                  (visibleColumns.itemName ||
+                    visibleColumns.make ||
+                    visibleColumns.description) && (
+                    <td className="py-3 px-4">
+                      {visibleColumns.itemName && (
+                        <div className="font-semibold text-slate-900">
+                          {item.itemName}
+                        </div>
+                      )}
+                      {visibleColumns.description && item.description && (
+                        <div className="text-[10px] text-slate-500 line-clamp-1 mt-0.5 uppercase">
+                          {item.description}
+                        </div>
+                      )}
+                      {visibleColumns.make && item.make && (
+                        <div className="text-[10px] text-indigo-500 bg-indigo-50 px-1.5 py-0.5 rounded inline-block mt-1 uppercase font-bold">
+                          {item.make}
+                        </div>
+                      )}
+                    </td>
+                  )}
+
+                {!mergeDescMake && visibleColumns.itemName && (
+                  <td className="py-3 px-4 font-semibold text-slate-900">
                     {item.itemName}
-                  </div>
-                  {item.description && (
-                    <div className="text-[10px] text-slate-500 line-clamp-1 mt-0.5">
-                      {item.description}
+                  </td>
+                )}
+                {!mergeDescMake && visibleColumns.description && (
+                  <td className="py-3 px-4 text-xs text-slate-500 uppercase">
+                    {item.description}
+                  </td>
+                )}
+                {!mergeDescMake && visibleColumns.make && (
+                  <td className="py-3 px-4 text-xs text-indigo-600 uppercase font-bold">
+                    {item.make}
+                  </td>
+                )}
+
+                {visibleColumns.category && (
+                  <td className="py-3 px-4 text-slate-500 text-xs font-medium uppercase">
+                    {item.category}
+                  </td>
+                )}
+
+                {visibleColumns.trackingType && (
+                  <td className="py-3 px-4">
+                    <span
+                      className={`text-[10px] font-bold rounded px-2 py-1 w-max inline-block uppercase ${item.trackingType === "Serialized" ? "bg-indigo-50 text-indigo-600" : "bg-slate-50 text-slate-500"}`}
+                    >
+                      {item.trackingType}
+                    </span>
+                  </td>
+                )}
+
+                {visibleColumns.baseUom && (
+                  <td className="py-3 px-4 text-slate-500 text-xs uppercase">
+                    {item.baseUom}
+                  </td>
+                )}
+
+                {visibleColumns.hsnCode && (
+                  <td className="py-3 px-4 text-slate-500 text-xs font-mono">
+                    {item.hsnCode || "-"}
+                  </td>
+                )}
+
+                {visibleColumns.mountingTechnology && (
+                  <td className="py-3 px-4">
+                    <span className="text-[10px] bg-amber-50 text-amber-700 px-2 py-1 rounded font-bold uppercase">
+                      {item.mountingTechnology || "N/A"}
+                    </span>
+                  </td>
+                )}
+
+                {visibleColumns.bufferLevels && (
+                  <td className="py-3 px-4">
+                    <span className="text-red-500 font-bold">
+                      {item.minStockLevel || 0}
+                    </span>{" "}
+                    /{" "}
+                    <span className="text-emerald-500 font-bold">
+                      {item.maxStockLevel || 0}
+                    </span>
+                  </td>
+                )}
+
+                {visibleColumns.techSpecs && (
+                  <td className="py-3 px-4">
+                    <div className="flex flex-wrap gap-1">
+                      {item.technicalSpecs &&
+                        Object.entries(item.technicalSpecs)
+                          .slice(0, 3)
+                          .map(([k, v]) => (
+                            <span
+                              key={k}
+                              className="text-[9px] bg-slate-100 text-slate-600 px-1 py-0.5 rounded uppercase"
+                            >
+                              {k}: {v}
+                            </span>
+                          ))}
+                      {item.technicalSpecs &&
+                        Object.keys(item.technicalSpecs).length > 3 && (
+                          <span className="text-[9px] text-slate-400">
+                            +{Object.keys(item.technicalSpecs).length - 3} more
+                          </span>
+                        )}
                     </div>
-                  )}
-                  {item.make && (
-                    <div className="text-xs text-slate-500 bg-slate-100 px-1.5 py-0.5 rounded inline-block mt-1 uppercase">
-                      Make: {item.make}
-                    </div>
-                  )}
-                </td>
-                <td className="py-3 px-4 text-slate-500 text-xs font-medium">
-                  {item.category}
-                </td>
-                <td className="py-3 px-4">
-                  <span
-                    className={`text-xs font-bold rounded px-2 py-1 w-max inline-block ${item.trackingType === "Serialized" ? "bg-indigo-50 text-indigo-600" : "bg-slate-50 text-slate-500"}`}
-                  >
-                    {item.trackingType}
-                  </span>
-                </td>
-                <td className="py-3 px-4 text-right">
-                  <span className="text-red-500 font-bold">
-                    {item.minStockLevel || 0}
-                  </span>{" "}
-                  /{" "}
-                  <span className="text-emerald-500 font-bold">
-                    {item.maxStockLevel || 0}
-                  </span>{" "}
-                  {item.baseUom}
-                </td>
+                  </td>
+                )}
                 <td className="py-3 px-4 text-right">
                   <div className="flex justify-end gap-2">
                     <button
