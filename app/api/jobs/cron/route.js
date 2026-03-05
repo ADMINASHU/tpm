@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { getCurrentISTDate } from "@/lib/dateUtils";
 import dbConnect from "@/lib/db";
 import VendorInvoice from "@/lib/models/VendorInvoice";
 // Note: This endpoint should be secured by an API key or internal webhook secret in production.
@@ -24,7 +25,7 @@ export async function POST(req) {
       paymentStatus: { $ne: "Paid" },
     }).populate("supplierId", "name contactEmail");
 
-    const now = new Date();
+    const now = getCurrentISTDate();
     const buckets = {
       "0-30": [],
       "31-60": [],

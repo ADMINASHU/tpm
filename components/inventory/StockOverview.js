@@ -1,6 +1,9 @@
-﻿import { useState, useEffect } from "react";
+﻿"use client";
+
+import { useState, useEffect, useMemo } from "react";
 import { Search, Plus, Calendar, Package, AlertCircle, CheckCircle2, X } from "lucide-react";
 import Breadcrumb from "@/components/Breadcrumb";
+import { getISODateIST } from "@/lib/dateUtils";
 
 function StockOverview({ pageName = "Inventory" }) {
   const [items, setItems] = useState([]);
@@ -14,7 +17,7 @@ function StockOverview({ pageName = "Inventory" }) {
 
   // Form state for opening stock
   const [openingQty, setOpeningQty] = useState("");
-  const [openingDate, setOpeningDate] = useState(new Date().toISOString().split('T')[0]);
+  const [openingDate, setOpeningDate] = useState(getISODateIST());
 
   const fetchStock = async () => {
     setIsLoading(true);
@@ -54,7 +57,7 @@ function StockOverview({ pageName = "Inventory" }) {
   const handleOpenModal = (item) => {
     setSelectedItem(item);
     setOpeningQty(item.openingStock || "");
-    setOpeningDate(item.openingStockDate ? new Date(item.openingStockDate).toISOString().split('T')[0] : new Date().toISOString().split('T')[0]);
+    setOpeningDate(item.openingStockDate ? getISODateIST(item.openingStockDate) : getISODateIST());
     setSaveStatus(null);
     setShowModal(true);
   };
@@ -83,10 +86,10 @@ function StockOverview({ pageName = "Inventory" }) {
 
       const json = await res.json();
       if (json.success) {
-        setSaveStatus({ type: 'success', message: "Opening stock updated successfully." });
+        setSaveStatus({ type: 'success', message: "Opening stock updated successfully and logged." });
         setTimeout(() => {
           setShowModal(false);
-          fetchStock();
+          fetchStock(); // This will refresh itemsWithLogs as well
         }, 1500);
       } else {
         setSaveStatus({ type: 'error', message: json.error || "Failed to update stock." });

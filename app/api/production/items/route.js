@@ -4,6 +4,9 @@ import { authOptions } from "@/lib/auth";
 import dbConnect from "@/lib/db";
 import Item from "@/lib/models/Item";
 import InventoryTransaction from "@/lib/models/InventoryTransaction";
+import User from "@/lib/models/User";
+import Factory from "@/lib/models/Factory";
+import { getCurrentISTDate } from "@/lib/dateUtils";
 
 export const dynamic = "force-dynamic";
 
@@ -126,17 +129,17 @@ export async function PUT(req) {
     });
 
     // If opening stock was JUST set or changed
-    if (updateData.openingStock !== undefined && updateData.openingStock !== oldItem.openingStock) {
+    if (updateData.openingStock !== undefined && Number(updateData.openingStock) !== Number(oldItem.openingStock)) {
       await InventoryTransaction.create({
         item: _id,
-        factory: factoryId,
+        factory: factoryId || oldItem.factoryId,
         type: "OPENING_STOCK",
-        quantity: updateData.openingStock,
+        quantity: Number(updateData.openingStock),
         balanceAfter: updatedItem.currentQuantity,
         reference: "INITIAL_MIGRATION",
-        notes: `Opening stock initialized to ${updateData.openingStock}`,
+        notes: `Opening stock initialized from ${oldItem.openingStock || 0} to ${updateData.openingStock}`,
         performedBy: session.user.id,
-        date: updateData.openingStockDate || new Date(),
+        date: updateData.openingStockDate ? new Date(updateData.openingStockDate) : getCurrentISTDate(),
       });
     }
 

@@ -6,6 +6,7 @@ import {
     RefreshCw, Package, User, Calendar, FileText
 } from "lucide-react";
 import Breadcrumb from "@/components/Breadcrumb";
+import { formatDateTimeIST, formatDateIST, formatTimeIST } from "@/lib/dateUtils";
 
 function TransactionLog({ pageName = "Inventory" }) {
     const [transactions, setTransactions] = useState([]);
@@ -151,10 +152,10 @@ function TransactionLog({ pageName = "Inventory" }) {
                                     <td className="py-4 px-6">
                                         <div className="flex flex-col">
                                             <span className="text-slate-900 font-bold">
-                                                {new Date(log.date || log.createdAt).toLocaleDateString()}
+                                                {formatDateIST(log.date || log.createdAt)}
                                             </span>
                                             <span className="text-[10px] text-slate-400 font-medium lowercase italic">
-                                                {log.date ? 'Log Date' : 'Recorded at'} {new Date(log.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                                                {log.date ? 'Log Date' : 'Recorded at'} {formatTimeIST(log.createdAt)}
                                             </span>
                                         </div>
                                     </td>

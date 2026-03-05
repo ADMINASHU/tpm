@@ -1,9 +1,10 @@
 import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
-import { authOptions } from "@/app/api/auth/[...nextauth]/route";
+import { authOptions } from "@/lib/auth";
 import dbConnect from "@/lib/db";
 import JobCard from "@/lib/models/JobCard";
 import User from "@/lib/models/User";
+import { getCurrentISTDate } from "@/lib/dateUtils";
 
 export async function POST(req, { params }) {
   try {
@@ -49,7 +50,7 @@ export async function POST(req, { params }) {
       task.sessions.push({
         operatorId: userId,
         operatorRate: hourlyRate,
-        startTime: new Date(),
+        startTime: getCurrentISTDate(),
         parallelFactor,
       });
     } else if (action === "Pause" || action === "Finish") {
@@ -63,7 +64,7 @@ export async function POST(req, { params }) {
           { status: 400 },
         );
 
-      activeSession.endTime = new Date();
+      activeSession.endTime = getCurrentISTDate();
 
       // Calculate duration in minutes
       const diffMs = activeSession.endTime - activeSession.startTime;

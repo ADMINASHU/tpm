@@ -1,8 +1,9 @@
 import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
-import { authOptions } from "@/app/api/auth/[...nextauth]/route";
+import { authOptions } from "@/lib/auth";
 import dbConnect from "@/lib/db";
 import HexRegistry from "@/lib/models/HexRegistry";
+import { getCurrentISTDate } from "@/lib/dateUtils";
 
 export async function POST(req) {
   try {
@@ -17,9 +18,9 @@ export async function POST(req) {
     await dbConnect();
 
     const generatedCodes = [];
-    const date = new Date();
-    const year = date.getFullYear().toString().slice(-2); // e.g., "26"
-    let month = (date.getMonth() + 1).toString().padStart(2, "0"); // e.g., "03"
+    const date = getCurrentISTDate();
+    const year = date.getUTCFullYear().toString().slice(-2); // e.g., "26"
+    let month = (date.getUTCMonth() + 1).toString().padStart(2, "0"); // e.g., "03"
     const currentMonthString = `${year}-${month}`;
 
     if (type === "Product") {

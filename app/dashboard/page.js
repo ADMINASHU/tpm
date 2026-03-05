@@ -1,8 +1,9 @@
 "use client";
 
+import { useState, useEffect } from "react";
 import { useSession } from "next-auth/react";
 import dynamic from 'next/dynamic';
-import { PackageSearch, Boxes, IndianRupee, TrendingUp } from "lucide-react";
+import { PackageSearch, Boxes, IndianRupee, TrendingUp, Package } from "lucide-react";
 
 // Dynamically import Recharts components to reduce initial bundle size (bundle-dynamic-imports)
 const DynamicAreaChart = dynamic(() => import('recharts').then(mod => mod.AreaChart), { ssr: false });
@@ -33,6 +34,25 @@ const liabilityData = [
 
 export default function DashboardPage() {
     const { data: session } = useSession();
+    const [stockCount, setStockCount] = useState(0);
+    const [isLoading, setIsLoading] = useState(true);
+
+    useEffect(() => {
+        async function fetchStats() {
+            try {
+                const res = await fetch("/api/production/items");
+                const json = await res.json();
+                if (json.success) {
+                    setStockCount(json.items?.length || 0);
+                }
+            } catch (error) {
+                console.error("Error fetching dashboard stats:", error);
+            } finally {
+                setIsLoading(false);
+            }
+        }
+        fetchStats();
+    }, []);
 
     return (
         <div className="flex-1 p-8">
@@ -45,7 +65,13 @@ export default function DashboardPage() {
                 </div>
 
                 {/* Stats Row */}
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-5 gap-6">
+                    <StatCard
+                        title="Stock Present in Inventory"
+                        value={isLoading ? "..." : stockCount}
+                        icon={Package}
+                        trend="+4"
+                    />
                     <StatCard title="Total Inventory Value" value="₹ 24,50K" icon={Boxes} trend="+12%" />
                     <StatCard title="Items Pending QC" value="142" icon={PackageSearch} trend="-5%" trendDown />
                     <StatCard title="Rolling Overhead/Unit" value="₹ 145.00" icon={TrendingUp} trend="-2%" trendDown />

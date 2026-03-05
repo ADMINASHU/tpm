@@ -4,6 +4,9 @@ import { authOptions } from "@/lib/auth";
 import dbConnect from "@/lib/db";
 import InventoryTransaction from "@/lib/models/InventoryTransaction";
 import Item from "@/lib/models/Item";
+import User from "@/lib/models/User";
+import Factory from "@/lib/models/Factory";
+import { getCurrentISTDate } from "@/lib/dateUtils";
 
 export const dynamic = "force-dynamic";
 
@@ -19,10 +22,12 @@ export async function GET(req) {
     const summary = searchParams.get("summary");
     const factoryId = session.user.factoryId;
 
-    const query = {};
-    if (factoryId) {
-        query.factory = factoryId;
+    // Strict check: if no factoryId in session, deny unless superadmin logic is added later
+    if (!factoryId) {
+        return NextResponse.json({ error: "No factory assigned to user session" }, { status: 403 });
     }
+
+    const query = { factory: factoryId };
 
     if (summary === "true") {
         const itemIds = await InventoryTransaction.distinct("item", query);
@@ -79,6 +84,7 @@ export async function POST(req) {
             notes,
             reference,
             performedBy: session.user.id,
+            date: getCurrentISTDate()
         });
 
         // Update item quantity

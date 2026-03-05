@@ -1,10 +1,11 @@
 import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
-import { authOptions } from "@/app/api/auth/[...nextauth]/route";
+import { authOptions } from "@/lib/auth";
 import dbConnect from "@/lib/db";
 import QCRecord from "@/lib/models/QCRecord";
 import HexRegistry from "@/lib/models/HexRegistry";
 import LedgerEntry from "@/lib/models/LedgerEntry";
+import { getCurrentISTDate } from "@/lib/dateUtils";
 
 export async function POST(req) {
   try {
@@ -62,7 +63,7 @@ export async function POST(req) {
           type: "Liability_Finalized",
           description: `QC Passed for ${quantityAccepted} units on PO ${poNumber}`,
           amount: 0, // In real app, calculate actual amount = qty * agreedRate
-          date: new Date(),
+          date: getCurrentISTDate(),
           factoryId,
         });
       }
@@ -85,7 +86,7 @@ export async function POST(req) {
           type: "Debit_Note",
           description: `QC Rejected / RTV for ${quantityRejected} units on PO ${poNumber}`,
           amount: 0, // Debit amount
-          date: new Date(),
+          date: getCurrentISTDate(),
           factoryId,
         });
       }

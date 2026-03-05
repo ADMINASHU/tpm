@@ -84,15 +84,20 @@ export default function SettingsPage() {
         };
     }, []);
 
-    const update = useCallback((key) => (val) => {
-        setPrefs(prev => {
-            const next = { ...prev, [key]: val };
-            savePrefs(next);
-            return next;
-        });
+    // Save to localStorage when prefs change
+    useEffect(() => {
+        // Skip the initial load effect
+        const raw = localStorage.getItem(STORAGE_KEY);
+        if (raw && JSON.stringify(prefs) === raw) return;
+
+        savePrefs(prefs);
         setSaved(true);
         if (savedTimerRef.current) clearTimeout(savedTimerRef.current);
         savedTimerRef.current = setTimeout(() => setSaved(false), 2000);
+    }, [prefs]);
+
+    const update = useCallback((key) => (val) => {
+        setPrefs(prev => ({ ...prev, [key]: val }));
     }, []);
 
     return (
