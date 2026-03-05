@@ -1,16 +1,20 @@
 ﻿"use client";
 
 import { Search, Database } from "lucide-react";
+import Breadcrumb from "@/components/Breadcrumb";
 
-function GenealogyTrace() {
+function GenealogyTrace({ pageName = "Production" }) {
   return (
     <div className="max-w-3xl">
       <div className="mb-8 flex items-center justify-between">
         <div>
-          <h2 className="text-xl font-bold text-slate-900 flex items-center">
-            <Search className="mr-2 text-indigo-600 h-6 w-6" />
-            Serial Number Genealogy
-          </h2>
+          <div>
+            <h2 className="text-xl font-bold text-slate-900 flex items-center">
+              <Search className="mr-2 text-indigo-600 h-6 w-6" />
+              Serial Number Genealogy
+            </h2>
+            <Breadcrumb pageName={pageName} subPageName="Genealogy Trace" />
+          </div>
           <p className="text-sm text-slate-500 mt-1">
             Trace all internal components, suppliers, and assigned operator via
             Serial Number.

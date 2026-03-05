@@ -1,15 +1,17 @@
 ﻿"use client";
 
-import { Truck } from "lucide-react";
+import { Truck, Search } from "lucide-react";
+import Breadcrumb from "@/components/Breadcrumb";
 
-function ExternalDispatch() {
+function ExternalDispatch({ pageName = "Logistics" }) {
   return (
     <div className="max-w-3xl">
       <div className="mb-8">
         <h2 className="text-xl font-bold text-slate-900 flex items-center">
-          <Truck className="mr-2 text-indigo-600 h-6 w-6" aria-hidden="true" />
-          Create Dispatch Order
+          <Truck className="mr-2 text-indigo-600 h-6 w-6" />
+          External Dispatch & Tracking
         </h2>
+        <Breadcrumb pageName={pageName} subPageName="External Dispatch" />
         <p className="text-sm text-slate-500 mt-1">
           Record outbound shipment of finished goods or spare parts to a
           customer or service center.

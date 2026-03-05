@@ -1,13 +1,17 @@
 ﻿"use client";
 
 import { BarChart2, Clock, RefreshCw, BookOpenCheck } from "lucide-react";
-
+import Breadcrumb from "@/components/Breadcrumb";
 
 
 // â”€â”€ Costing & Automation Tab â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
-function CostingTab() {
+function CostingTab({ pageName = "Finance" }) {
   return (
     <div className="space-y-6">
+      <div>
+        <h2 className="text-xl font-bold text-slate-900">Financial Costing Engine</h2>
+        <Breadcrumb pageName={pageName} subPageName="Costing & Controls" />
+      </div>
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         {/* Rolling Overhead */}
         <div className="bg-white rounded-2xl shadow-sm border border-slate-100 p-6">

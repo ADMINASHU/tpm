@@ -1,8 +1,9 @@
 ﻿"use client";
 
 import { CheckCircle2 } from "lucide-react";
+import Breadcrumb from "@/components/Breadcrumb";
 
-function QualityControl() {
+function QualityControl({ pageName = "Inventory" }) {
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between mb-8">
@@ -11,6 +12,7 @@ function QualityControl() {
             <CheckCircle2 className="mr-2 text-indigo-600 h-6 w-6" />
             QC Audits & RTV Processing
           </h2>
+          <Breadcrumb pageName={pageName} subPageName="Quality Control" />
           <p className="text-sm text-slate-500 mt-1">
             Audit pending GRNs, finalize liabilities, or process Return to
             Vendor.

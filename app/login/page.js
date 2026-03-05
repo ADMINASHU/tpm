@@ -4,6 +4,7 @@ import { useState } from "react";
 import { signIn } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import { Factory } from "lucide-react";
+import Logo from "@/components/Logo";
 
 export default function LoginPage() {
     const router = useRouter();
@@ -37,13 +38,10 @@ export default function LoginPage() {
             <div className="max-w-md w-full space-y-8 bg-white p-10 rounded-3xl shadow-xl ring-1 ring-slate-100">
                 <div className="text-center flex flex-col items-center">
                     <div className="h-16 w-16 bg-indigo-50 rounded-2xl flex items-center justify-center mb-4 transition-transform hover:scale-105">
-                        <Factory className="h-8 w-8 text-indigo-600" aria-hidden="true" />
+                       <Logo />
                     </div>
-                    <h2 className="mt-2 text-3xl font-bold tracking-tight text-slate-900">
-                        Techser ERP
-                    </h2>
                     <p className="mt-2 text-sm text-slate-500 font-medium">
-                        Plant Management System &bull; Secure Login
+                        Techser Plant Management System &bull; Secure Login
                     </p>
                 </div>
                 <form className="mt-8 space-y-6" onSubmit={handleSubmit}>

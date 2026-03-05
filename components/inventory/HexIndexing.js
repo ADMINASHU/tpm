@@ -1,8 +1,9 @@
 ﻿"use client";
 
 import { QrCode, Search } from "lucide-react";
+import Breadcrumb from "@/components/Breadcrumb";
 
-function HexIndexing() {
+function HexIndexing({ pageName = "Inventory" }) {
   return (
     <div className="max-w-3xl">
       <div className="mb-8 flex items-center justify-between">
@@ -11,6 +12,7 @@ function HexIndexing() {
             <QrCode className="mr-2 text-indigo-600 h-6 w-6" />
             Hex Tag Indexing
           </h2>
+          <Breadcrumb pageName={pageName} subPageName="Hex Tag Indexing" />
           <p className="text-sm text-slate-500 mt-1">
             Scan unindexed tags and link them to exact technical specs.
           </p>

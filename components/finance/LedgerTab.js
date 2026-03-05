@@ -1,7 +1,7 @@
 ﻿"use client";
 
-import { ArrowUpRight, ArrowDownLeft, BarChart2, BookOpenCheck, Download } from "lucide-react";
-
+import { Search, Filter, Download, ArrowUpRight, ArrowDownRight, History, CreditCard, Receipt, Building2 } from "lucide-react";
+import Breadcrumb from "@/components/Breadcrumb";
 
 
 const LEDGER_ENTRIES = [
@@ -49,7 +49,7 @@ const LEDGER_ENTRIES = [
   },
 ];
 
-function LedgerTab() {
+function LedgerTab({ pageName = "Finance" }) {
   let running = 0;
   const rows = LEDGER_ENTRIES.map((e) => {
     running += e.type === "debit" ? e.amount : -e.amount;
@@ -72,7 +72,7 @@ function LedgerTab() {
             label: "Total Debits",
             value: totalDebit,
             color: "rose",
-            icon: ArrowDownLeft,
+            icon: ArrowDownRight,
           },
           {
             label: "Total Credits",
@@ -84,7 +84,7 @@ function LedgerTab() {
             label: "Net Balance",
             value: totalDebit - totalCredit,
             color: "indigo",
-            icon: BarChart2,
+            icon: Building2,
           },
         ].map(({ label, value, color, icon: Icon }) => (
           <div
@@ -109,10 +109,13 @@ function LedgerTab() {
       {/* Ledger table */}
       <div className="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden">
         <div className="p-6 border-b border-slate-100 flex justify-between items-center bg-slate-50/50">
-          <h2 className="text-lg font-bold text-slate-900 flex items-center">
-            <BookOpenCheck className="w-5 h-5 mr-2 text-indigo-600" aria-hidden="true" />
-            General Ledger
-          </h2>
+          <div className="flex flex-col">
+            <h2 className="text-lg font-bold text-slate-900 flex items-center gap-2">
+              <History className="w-5 h-5 text-indigo-600" />
+              Ledger Transaction History
+            </h2>
+            <Breadcrumb pageName={pageName} subPageName="Ledger Book" />
+          </div>
           <button type="button" className="text-slate-400 hover:text-indigo-600">
             <Download className="w-5 h-5" aria-hidden="true" />
           </button>

@@ -1,6 +1,8 @@
 ﻿"use client";
 
 import { useState } from "react";
+import { Users, Mail, Phone, MapPin } from "lucide-react";
+import Breadcrumb from "@/components/Breadcrumb";
 
 const SUPPLIERS_LIST = [
   { name: "Acme Corp", category: "Electronic Components", contact: "acme@supply.com", rating: 5, status: "Approved" },
@@ -9,7 +11,7 @@ const SUPPLIERS_LIST = [
   { name: "Packrite Ltd", category: "Packaging Materials", contact: "pack@packrite.com", rating: 4, status: "Approved" },
 ];
 
-function SupplierConfig() {
+function SupplierConfig({ pageName = "Procurement" }) {
   const [showForm, setShowForm] = useState(false);
   const stars = (n) => "â˜…".repeat(n) + "â˜†".repeat(5 - n);
   const statusColor = {
@@ -20,7 +22,12 @@ function SupplierConfig() {
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
-        <h2 className="text-lg font-bold text-slate-900">Approved Suppliers</h2>
+        <div>
+          <h2 className="text-lg font-bold text-slate-900">
+            Approved Supplier Directory
+          </h2>
+          <Breadcrumb pageName={pageName} subPageName="Supplier Config" />
+        </div>
         <button
           onClick={() => setShowForm(!showForm)}
           className="flex items-center gap-2 rounded-xl bg-indigo-600 px-4 py-2 text-sm font-bold text-white hover:bg-indigo-500 transition-all shadow-sm"

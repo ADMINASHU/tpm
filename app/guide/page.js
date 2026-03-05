@@ -113,156 +113,191 @@ const modules = [
     },
 ];
 
-const colorMap = {
-    indigo: "bg-indigo-50 text-indigo-700 ring-indigo-200",
-    violet: "bg-violet-50 text-violet-700 ring-violet-200",
-    emerald: "bg-emerald-50 text-emerald-700 ring-emerald-200",
-    amber: "bg-amber-50 text-amber-700 ring-amber-200",
-    sky: "bg-sky-50 text-sky-700 ring-sky-200",
-    rose: "bg-rose-50 text-rose-700 ring-rose-200",
-    slate: "bg-slate-100 text-slate-700 ring-slate-200",
-};
-
-const iconColorMap = {
-    indigo: "text-indigo-600",
-    violet: "text-violet-600",
-    emerald: "text-emerald-600",
-    amber: "text-amber-600",
-    sky: "text-sky-600",
-    rose: "text-rose-600",
-    slate: "text-slate-600",
-};
-
-function ModuleCard({ module }) {
-    const [open, setOpen] = useState(false);
-    const Icon = module.icon;
-
-    return (
-        <div className="bg-white border border-slate-100 rounded-2xl shadow-sm overflow-hidden">
-            <button
-                onClick={() => setOpen(!open)}
-                className="w-full flex items-center justify-between p-6 text-left hover:bg-slate-50 transition-colors"
-            >
-                <div className="flex items-center gap-4">
-                    <div className={`p-2.5 rounded-xl ring-1 ${colorMap[module.color]}`}>
-                        <Icon className={`h-5 w-5 ${iconColorMap[module.color]}`} aria-hidden="true" />
-                    </div>
-                    <div>
-                        <h3 className="text-base font-bold text-slate-900">{module.title}</h3>
-                        <p className="text-sm text-slate-500 mt-0.5">{module.summary}</p>
-                    </div>
-                </div>
-                <div className="flex items-center gap-3 shrink-0">
-                    <div className="hidden sm:flex gap-1">
-                        {module.roles.map((r) => (
-                            <span key={r} className="text-xs font-semibold px-2.5 py-1 rounded-full bg-slate-100 text-slate-600">
-                                {r}
-                            </span>
-                        ))}
-                    </div>
-                    {open ? <ChevronDown className="h-4 w-4 text-slate-400" /> : <ChevronRight className="h-4 w-4 text-slate-400" />}
-                </div>
-            </button>
-
-            {open && (
-                <div className="border-t border-slate-100 px-6 py-5 space-y-4">
-                    <ol className="space-y-3">
-                        {module.steps.map((step, i) => (
-                            <li key={i} className="flex gap-3 text-sm text-slate-700">
-                                <span className={`shrink-0 w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold ring-1 ${colorMap[module.color]}`}>
-                                    {i + 1}
-                                </span>
-                                <span className="leading-relaxed">{step}</span>
-                            </li>
-                        ))}
-                    </ol>
-
-                    {module.tip && (
-                        <div className="flex gap-2.5 items-start bg-blue-50 rounded-xl p-4 text-sm text-blue-800 ring-1 ring-blue-100">
-                            <Info className="h-4 w-4 text-blue-500 shrink-0 mt-0.5" aria-hidden="true" />
-                            <span>{module.tip}</span>
-                        </div>
-                    )}
-
-                    {module.warning && (
-                        <div className="flex gap-2.5 items-start bg-amber-50 rounded-xl p-4 text-sm text-amber-800 ring-1 ring-amber-100">
-                            <AlertTriangle className="h-4 w-4 text-amber-500 shrink-0 mt-0.5" aria-hidden="true" />
-                            <span>{module.warning}</span>
-                        </div>
-                    )}
-                </div>
-            )}
-        </div>
-    );
-}
-
 export default function GuidePage() {
     return (
         <div className="flex-1 p-8 bg-slate-50/50">
             <div className="max-w-[1600px] mx-auto space-y-8">
 
-                <Breadcrumb pageName="System" subPageName="Guide" />
-
                 {/* Header */}
-                <div className="bg-gradient-to-br from-indigo-600 to-indigo-700 rounded-2xl p-8 text-white">
-                    <div className="flex items-center gap-3 mb-3">
-                        <BookOpen className="h-7 w-7 text-indigo-200" aria-hidden="true" />
-                        <h1 className="text-2xl font-bold">User Guide</h1>
+                <div className="flex items-center justify-between pb-2 border-b border-slate-100">
+                    <div>
+                        <h1 className="text-3xl font-black tracking-tight text-slate-900">User Guide</h1>
+                        <Breadcrumb pageName="System" subPageName="User Guide" />
+                        <p className="text-slate-500 mt-2 text-sm font-medium max-w-2xl">
+                            Operational handbook for the Techser Plant Management System.
+                            Follow these workflows to ensure data integrity and manufacturing precision.
+                        </p>
                     </div>
-                    <p className="text-indigo-200 text-sm leading-relaxed max-w-2xl">
-                        Welcome to the <strong className="text-white">Techser Plant Management App</strong>. This guide explains
-                        each module and the step-by-step workflow. Expand any module below to see instructions.
-                    </p>
+                </div>
 
-                    {/* Key rules */}
-                    <div className="mt-6 grid grid-cols-1 sm:grid-cols-3 gap-3">
+                {/* Core Rules Section */}
+                <div className="bg-white border border-slate-100 rounded-2xl shadow-sm overflow-hidden">
+                    <div className="px-6 py-4 border-b border-slate-50 bg-slate-50/60">
+                        <h2 className="text-xs font-bold text-slate-400 uppercase tracking-widest flex items-center gap-2">
+                            <CheckCircle2 className="w-4 h-4 text-indigo-500" />
+                            Core Operating Rules
+                        </h2>
+                    </div>
+                    <div className="px-6 py-6 grid grid-cols-1 md:grid-cols-3 gap-6">
                         {[
-                            { icon: CheckCircle2, text: "All purchases need an approved Indent first" },
-                            { icon: QrCode, text: "High-value items tracked by 4-digit Hex Tag" },
-                            { icon: Users, text: "Data strictly isolated per factory — no cross-access" },
-                        ].map(({ icon: Icon, text }, i) => (
-                            <div key={i} className="flex items-center gap-2 bg-indigo-500/30 rounded-xl px-4 py-3 text-sm text-white">
-                                <Icon className="h-4 w-4 text-indigo-200 shrink-0" aria-hidden="true" />
-                                {text}
+                            {
+                                title: "No Indent, No PO",
+                                desc: "All procurement must start with an approved Indent. Rate locking happens during PO generation.",
+                                icon: FileBadge,
+                                color: "violet"
+                            },
+                            {
+                                title: "Hex-Tag Strategy",
+                                desc: "High-value components (PCBs, Transformers) get individual Hex Tags. Small items use Bulk Qty.",
+                                icon: QrCode,
+                                color: "emerald"
+                            },
+                            {
+                                title: "Factory Isolation",
+                                desc: "Users only see data for their assigned factory. No cross-factory stock or user visibility.",
+                                icon: Users,
+                                color: "amber"
+                            }
+                        ].map((rule, i) => (
+                            <div key={i} className="flex gap-4">
+                                <div className={`p-2.5 rounded-xl bg-${rule.color}-50 ring-1 ring-${rule.color}-100 shrink-0 h-fit`}>
+                                    <rule.icon className={`h-5 w-5 text-${rule.color}-600`} aria-hidden="true" />
+                                </div>
+                                <div>
+                                    <h4 className="text-sm font-bold text-slate-900">{rule.title}</h4>
+                                    <p className="text-xs text-slate-500 mt-1 leading-relaxed">{rule.desc}</p>
+                                </div>
                             </div>
                         ))}
                     </div>
                 </div>
 
-                {/* Role Reference */}
-                <div className="bg-white border border-slate-100 rounded-2xl shadow-sm p-6">
-                    <h2 className="text-sm font-bold text-slate-500 uppercase tracking-wider mb-4">Role Access Reference</h2>
-                    <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
-                        {[
-                            { role: "Admin", desc: "Full access to all modules & setup" },
-                            { role: "Manager", desc: "Approvals, production, reports" },
-                            { role: "Store", desc: "GRN, inventory, transfers" },
-                            { role: "Operator", desc: "Production builds only" },
-                            { role: "Finance", desc: "Ledger, AP aging, finance" },
-                            { role: "Logistics", desc: "Stock transfers & dispatch" },
-                        ].map(({ role, desc }) => (
-                            <div key={role} className="bg-slate-50 rounded-xl p-3 ring-1 ring-slate-100">
-                                <p className="text-sm font-bold text-slate-900">{role}</p>
-                                <p className="text-xs text-slate-500 mt-0.5">{desc}</p>
-                            </div>
-                        ))}
-                    </div>
-                </div>
-
-                {/* Module Guides */}
-                <div>
-                    <h2 className="text-sm font-bold text-slate-500 uppercase tracking-wider mb-4">Module Guides</h2>
-                    <div className="space-y-3">
+                {/* Module Workflows */}
+                <div className="space-y-4">
+                    <h2 className="text-xs font-bold text-slate-400 uppercase tracking-widest ml-1">Module Workflows</h2>
+                    <div className="grid grid-cols-1 gap-4">
                         {modules.map((m) => (
                             <ModuleCard key={m.title} module={m} />
                         ))}
                     </div>
                 </div>
 
-                <p className="text-center text-xs text-slate-400 pb-4">
-                    Techser Plant Management App · For support contact your factory Admin
+                {/* Role Reference */}
+                <div className="bg-white border border-slate-100 rounded-2xl shadow-sm overflow-hidden">
+                    <div className="px-6 py-4 border-b border-slate-50 bg-slate-50/60">
+                        <h2 className="text-xs font-bold text-slate-400 uppercase tracking-widest">Role Access Matrix</h2>
+                    </div>
+                    <div className="px-6 py-6 grid grid-cols-2 lg:grid-cols-6 gap-4">
+                        {[
+                            { role: "Admin", desc: "Full Master Access" },
+                            { role: "Manager", desc: "Approvals & Reports" },
+                            { role: "Store", desc: "GRN & Inventory" },
+                            { role: "Operator", desc: "Assembly Builds" },
+                            { role: "Finance", desc: "Ledger & Aging" },
+                            { role: "Logistics", desc: "Transfers & Dispatch" },
+                        ].map(({ role, desc }) => (
+                            <div key={role} className="text-center p-3 rounded-xl bg-slate-50 border border-slate-100 transition-transform hover:-translate-y-0.5">
+                                <p className="text-xs font-bold text-slate-900">{role}</p>
+                                <p className="text-[10px] text-slate-500 mt-1">{desc}</p>
+                            </div>
+                        ))}
+                    </div>
+                </div>
+
+                <p className="text-center text-[11px] font-medium text-slate-400 pb-4">
+                    Proprietary Software of Techser Plant Management &bull; Internal Documentation v2.0
                 </p>
             </div>
+        </div>
+    );
+}
+
+function ModuleCard({ module }) {
+    const [open, setOpen] = useState(false);
+    const Icon = module.icon;
+
+    return (
+        <div className="bg-white border border-slate-100 rounded-2xl shadow-sm overflow-hidden transition-all hover:border-indigo-100">
+            <button
+                onClick={() => setOpen(!open)}
+                className="w-full flex items-center justify-between p-6 text-left"
+            >
+                <div className="flex items-center gap-4">
+                    <div className={`p-2.5 rounded-xl bg-${module.color}-50 ring-1 ring-${module.color}-100`}>
+                        <Icon className={`h-5 w-5 text-${module.color}-600`} aria-hidden="true" />
+                    </div>
+                    <div>
+                        <h3 className="text-base font-bold text-slate-900">{module.title}</h3>
+                        <p className="text-xs text-slate-500 mt-0.5">{module.summary}</p>
+                    </div>
+                </div>
+                <div className="flex items-center gap-4 shrink-0">
+                    <div className="hidden md:flex gap-1.5">
+                        {module.roles.map((r) => (
+                            <span key={r} className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-slate-100 text-slate-500 border border-slate-200">
+                                {r}
+                            </span>
+                        ))}
+                    </div>
+                    <div className={`p-1 rounded-lg transition-colors ${open ? 'bg-indigo-50' : ''}`}>
+                        {open ? <ChevronDown className="h-4 w-4 text-indigo-600" /> : <ChevronRight className="h-4 w-4 text-slate-400" />}
+                    </div>
+                </div>
+            </button>
+
+            {open && (
+                <div className="border-t border-slate-50 px-6 py-6 bg-slate-50/30">
+                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                        <div>
+                            <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-4">Standard Workflow</p>
+                            <ol className="space-y-4">
+                                {module.steps.map((step, i) => (
+                                    <li key={i} className="flex gap-4 group">
+                                        <span className={`shrink-0 w-6 h-6 rounded-lg bg-white border border-slate-200 flex items-center justify-center text-[11px] font-bold text-slate-400 group-hover:border-indigo-300 group-hover:text-indigo-600 transition-colors`}>
+                                            0{i + 1}
+                                        </span>
+                                        <span className="text-sm text-slate-600 leading-relaxed pt-0.5">{step}</span>
+                                    </li>
+                                ))}
+                            </ol>
+                        </div>
+
+                        <div className="space-y-4">
+                            {module.tip && (
+                                <div className="p-4 bg-emerald-50 rounded-2xl border border-emerald-100">
+                                    <div className="flex items-center gap-2 mb-2">
+                                        <CheckCircle2 className="h-4 w-4 text-emerald-600" />
+                                        <p className="text-xs font-bold text-emerald-900 uppercase tracking-wide">Best Practice</p>
+                                    </div>
+                                    <p className="text-sm text-emerald-700 leading-relaxed italic border-l-2 border-emerald-200 pl-3">{module.tip}</p>
+                                </div>
+                            )}
+
+                            {module.warning && (
+                                <div className="p-4 bg-rose-50 rounded-2xl border border-rose-100">
+                                    <div className="flex items-center gap-2 mb-2">
+                                        <AlertTriangle className="h-4 w-4 text-rose-600" />
+                                        <p className="text-xs font-bold text-rose-900 uppercase tracking-wide">Critical Warning</p>
+                                    </div>
+                                    <p className="text-sm text-rose-700 leading-relaxed border-l-2 border-rose-200 pl-3">{module.warning}</p>
+                                </div>
+                            )}
+
+                            {!module.tip && !module.warning && (
+                                <div className="p-4 bg-indigo-50 rounded-2xl border border-indigo-100">
+                                    <div className="flex items-center gap-2 mb-2">
+                                        <Info className="h-4 w-4 text-indigo-600" />
+                                        <p className="text-xs font-bold text-indigo-900 uppercase tracking-wide">System Note</p>
+                                    </div>
+                                    <p className="text-sm text-indigo-700 leading-relaxed italic border-l-2 border-indigo-200 pl-3">
+                                        Data captured here impacts the global dashboard and real-time inventory valuations.
+                                    </p>
+                                </div>
+                            )}
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
     );
 }

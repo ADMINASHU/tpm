@@ -8,6 +8,7 @@ import Breadcrumb from "@/components/Breadcrumb";
 const QuickGRN = dynamic(() => import("@/components/inventory/QuickGRN"), { loading: () => <TabLoader /> });
 const HexIndexing = dynamic(() => import("@/components/inventory/HexIndexing"), { loading: () => <TabLoader /> });
 const StockOverview = dynamic(() => import("@/components/inventory/StockOverview"), { loading: () => <TabLoader /> });
+const TransactionLog = dynamic(() => import("@/components/inventory/TransactionLog"), { loading: () => <TabLoader /> });
 const TagGenerator = dynamic(() => import("@/components/inventory/TagGenerator"), { loading: () => <TabLoader /> });
 const QualityControl = dynamic(() => import("@/components/inventory/QualityControl"), { loading: () => <TabLoader /> });
 
@@ -25,12 +26,13 @@ function TabLoader() {
 const PAGE_HEADERS = {
   grn: { title: "Quick GRN", subtitle: "Fast goods receipt entry — generates Hex Tags for all received units." },
   stock: { title: "Stock Overview", subtitle: "Live view of all raw materials and identified components." },
+  logs: { title: "Transaction Logs", subtitle: "Full historical audit trail of every inventory movement." },
   qc: { title: "Quality Control", subtitle: "Audit incoming GRNs, accept items, or process Return to Vendor (RTV)." },
   hex: { title: "Hex Tag Indexing", subtitle: "Scan unindexed tags and link them to exact technical specifications." },
   tags: { title: "Tag Generator", subtitle: "Print bulk Hex Tags or specific component QR barcodes." },
 };
 
-const TABS = ["grn", "qc", "hex", "stock", "tags"];
+const TABS = ["grn", "qc", "hex", "stock", "logs", "tags"];
 
 function InventoryContent() {
   const searchParams = useSearchParams();
@@ -46,7 +48,6 @@ function InventoryContent() {
   return (
     <div className="flex-1 p-8">
       <div className="max-w-[1600px] mx-auto space-y-8">
-        <Breadcrumb pageName="Inventory" subPageName={title} subtitle={subtitle} />
 
         {/* Tab switcher — mobile only */}
         <div className="md:hidden flex flex-wrap gap-1 p-1 bg-slate-200/50 rounded-xl w-fit">
@@ -55,8 +56,8 @@ function InventoryContent() {
               key={tabKey}
               onClick={() => setActiveTab(tabKey)}
               className={`px-4 py-2 text-sm font-semibold rounded-lg transition-all ${activeTab === tabKey
-                  ? "bg-white text-indigo-700 shadow-sm ring-1 ring-slate-200"
-                  : "text-slate-500 hover:text-slate-700 hover:bg-slate-200/50"
+                ? "bg-white text-indigo-700 shadow-sm ring-1 ring-slate-200"
+                : "text-slate-500 hover:text-slate-700 hover:bg-slate-200/50"
                 }`}
             >
               {PAGE_HEADERS[tabKey].title}
@@ -65,11 +66,12 @@ function InventoryContent() {
         </div>
 
         <div className="bg-white rounded-2xl shadow-sm border border-slate-100 p-8">
-          {activeTab === "grn" && <QuickGRN />}
-          {activeTab === "qc" && <QualityControl />}
-          {activeTab === "hex" && <HexIndexing />}
-          {activeTab === "stock" && <StockOverview />}
-          {activeTab === "tags" && <TagGenerator />}
+          {activeTab === "grn" && <QuickGRN pageName="Inventory" />}
+          {activeTab === "qc" && <QualityControl pageName="Inventory" />}
+          {activeTab === "hex" && <HexIndexing pageName="Inventory" />}
+          {activeTab === "stock" && <StockOverview pageName="Inventory" />}
+          {activeTab === "logs" && <TransactionLog pageName="Inventory" />}
+          {activeTab === "tags" && <TagGenerator pageName="Inventory" />}
         </div>
       </div>
     </div>

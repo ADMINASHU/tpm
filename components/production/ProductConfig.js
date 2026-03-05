@@ -1,14 +1,18 @@
 ﻿"use client";
 
 import { Database } from "lucide-react";
+import Breadcrumb from "@/components/Breadcrumb";
 
-function ProductConfig() {
+function ProductConfig({ pageName = "Production" }) {
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
-        <h2 className="text-lg font-bold text-slate-900">
-          Finished Goods Catalog
-        </h2>
+        <div>
+          <h2 className="text-lg font-bold text-slate-900">
+            Finished Goods Catalog
+          </h2>
+          <Breadcrumb pageName={pageName} subPageName="Product Config" />
+        </div>
         <button className="flex items-center gap-2 rounded-xl bg-indigo-600 px-4 py-2 text-sm font-bold text-white hover:bg-indigo-500 transition-all shadow-sm">
           + Add Product Model
         </button>

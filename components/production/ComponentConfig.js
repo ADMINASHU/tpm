@@ -1,8 +1,9 @@
 ﻿"use client";
 
 import { useState, useEffect, useMemo } from "react";
+import Breadcrumb from "@/components/Breadcrumb";
 
-function ComponentConfig() {
+function ComponentConfig({ pageName = "Production" }) {
   const [showForm, setShowForm] = useState(false);
   const [techSpecs, setTechSpecs] = useState([{ name: "Value", value: "" }]);
 
@@ -571,9 +572,12 @@ function ComponentConfig() {
         onChange={handleCsvFile}
       />
       <div className="flex items-center justify-between">
-        <h2 className="text-lg font-bold text-slate-900">
-          Raw Materials & Components Master
-        </h2>
+        <div>
+          <h2 className="text-lg font-bold text-slate-900">
+            Raw Materials & Components Master
+          </h2>
+          <Breadcrumb pageName={pageName} subPageName="Component Config" />
+        </div>
         <div className="flex gap-2">
           <button
             onClick={downloadTemplate}

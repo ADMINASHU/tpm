@@ -7,7 +7,9 @@ const PENDING_INDENTS = [
   { id: "IND-2024-082", dept: "Production", item: "PCB Alpha-X", qty: 25, state: "Pending" },
 ];
 
-function POApproval() {
+function POApproval({ pageName = "Procurement" }) {
+  const Breadcrumb = require("@/components/Breadcrumb").default;
+
 
   return (
     <div>
@@ -17,6 +19,7 @@ function POApproval() {
             <FileText className="mr-2 text-indigo-600 h-6 w-6" />
             Pending Indents & PO Generation
           </h2>
+          <Breadcrumb pageName={pageName} subPageName="PO Approvals" />
           <p className="text-sm text-slate-500 mt-1">
             Review indents and automatically generate PO from pre-negotiated
             Vendor catalogs.

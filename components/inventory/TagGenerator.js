@@ -1,13 +1,15 @@
 ﻿"use client";
 
 import { useState } from "react";
+import Breadcrumb from "@/components/Breadcrumb";
 
-function TagGenerator() {
+function TagGenerator({ pageName = "Inventory" }) {
   return (
     <div className="max-w-2xl space-y-6">
-      <h2 className="text-xl font-bold text-slate-900 flex items-center mb-6">
+      <h2 className="text-xl font-bold text-slate-900 flex items-center mb-1">
         Generate Inventory Tags
       </h2>
+      <Breadcrumb pageName={pageName} subPageName="Tag Generator" />
       <div className="grid grid-cols-2 gap-6">
         <div className="bg-indigo-50 border border-indigo-100 p-6 rounded-2xl">
           <h3 className="font-bold text-indigo-900 mb-2">

@@ -2,8 +2,9 @@
 
 import { useState, useEffect } from "react";
 import { Database } from "lucide-react";
+import Breadcrumb from "@/components/Breadcrumb";
 
-function BOMConfig() {
+function BOMConfig({ pageName = "Production" }) {
   const [isInitialized, setIsInitialized] = useState(false);
   const [targetProduct, setTargetProduct] = useState("");
   const [materials, setMaterials] = useState([]);
@@ -16,10 +17,13 @@ function BOMConfig() {
   return (
     <div className="max-w-4xl">
       <div className="mb-6">
-        <h2 className="text-xl font-bold text-slate-900 flex items-center">
-          <Database className="mr-2 text-indigo-600 h-6 w-6" />
-          Master BOM Configuration
-        </h2>
+        <div>
+          <h2 className="text-xl font-bold text-slate-900 flex items-center">
+            <Database className="mr-2 text-indigo-600 h-6 w-6" />
+            Master BOM Configuration
+          </h2>
+          <Breadcrumb pageName={pageName} subPageName="BOM Configuration" />
+        </div>
         <p className="text-sm text-slate-500 mt-1">
           Define ratio mappings for Spare Parts (PCBs) and Finished Products.
         </p>

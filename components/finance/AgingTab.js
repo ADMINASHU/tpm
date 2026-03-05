@@ -1,7 +1,7 @@
-﻿"use client";
-
+﻿
 import { useState, useEffect } from "react";
-import { Clock, Download } from "lucide-react";
+import { ChevronRight, ArrowUpRight, ArrowDownRight, Clock, Building2, Receipt, Search, Filter, Mail, AlertCircle, FileText, Download } from "lucide-react";
+import Breadcrumb from "@/components/Breadcrumb";
 
 const AGING_DATA = [
   { vendor: "Acme Corp", invoice: "INV-201", due: "0-30", amount: 32000, status: "pending" },
@@ -31,15 +31,18 @@ const statusBadge = (s) =>
     ),
   })[s];
 
-function AgingTab() {
+function AgingTab({ pageName = "Finance" }) {
 
   return (
     <div className="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden">
       <div className="p-6 border-b border-slate-100 flex justify-between items-center bg-slate-50/50">
-        <h2 className="text-lg font-bold text-slate-900 flex items-center">
-          <Clock className="w-5 h-5 mr-2 text-indigo-600" aria-hidden="true" />
-          Accounts Payable Aging
-        </h2>
+        <div className="mb-6">
+          <h2 className="text-lg font-bold text-slate-900 flex items-center gap-2">
+            <Clock className="w-5 h-5 text-indigo-600" />
+            Payables Aging Balance
+          </h2>
+          <Breadcrumb pageName={pageName} subPageName="AP Aging Report" />
+        </div>
         <button type="button" className="text-slate-400 hover:text-indigo-600">
           <Download className="w-5 h-5" aria-hidden="true" />
         </button>

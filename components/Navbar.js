@@ -9,7 +9,7 @@ import {
     ChevronDown, Building, Users, Info, ClipboardList,
     FileCheck, QrCode, Package, Layers, RefreshCw, Truck as TruckOut,
     BarChart2, BookOpenCheck, GitBranch, SlidersHorizontal,
-    UserCircle2, Factory, Menu, X
+    UserCircle2, Factory, Menu, X, History, FileSearch
 } from "lucide-react";
 import clsx from "clsx";
 import { useState, useRef, useEffect } from "react";
@@ -29,7 +29,9 @@ const navItems = [
         name: "Inventory", href: "/inventory", icon: PackageSearch,
         children: [
             { name: "Quick GRN", href: "/inventory?tab=grn", icon: Package },
+            { name: "Quality Control", href: "/inventory?tab=qc", icon: FileSearch },
             { name: "Stock Overview", href: "/inventory?tab=stock", icon: Layers },
+            { name: "Transaction Logs", href: "/inventory?tab=logs", icon: History },
             { name: "Hex Tag Index", href: "/inventory?tab=hex", icon: QrCode },
             { name: "Tag Generator", href: "/inventory?tab=tags", icon: Settings },
         ],

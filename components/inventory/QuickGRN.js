@@ -2,8 +2,9 @@
 
 import { useState } from "react";
 import { PlusCircle, CheckCircle2 } from "lucide-react";
+import Breadcrumb from "@/components/Breadcrumb";
 
-function QuickGRN() {
+function QuickGRN({ pageName = "Inventory" }) {
   const [success, setSuccess] = useState(false);
 
   const handleSubmit = (e) => {
@@ -19,6 +20,7 @@ function QuickGRN() {
           <PlusCircle className="mr-2 text-indigo-600 h-6 w-6" aria-hidden="true" />
           Quick GRN (Buffer Stock)
         </h2>
+        <Breadcrumb pageName={pageName} subPageName="Quick GRN" />
         <p className="text-sm text-slate-500 mt-1">
           Fast entry for unloading trucks. Generates Hex Tags for later
           indexing.

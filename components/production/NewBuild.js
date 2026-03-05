@@ -2,8 +2,9 @@
 
 import { useState, useEffect } from "react";
 import { Wrench, QrCode, ArrowRight } from "lucide-react";
+import Breadcrumb from "@/components/Breadcrumb";
 
-function NewBuild() {
+function NewBuild({ pageName = "Production" }) {
   const [components, setComponents] = useState([]);
   const [scannedTag, setScannedTag] = useState("");
   const [taskState, setTaskState] = useState("Pending"); // Pending, In_Progress, Paused, Completed
@@ -29,10 +30,13 @@ function NewBuild() {
     <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
       <div>
         <div className="mb-6">
-          <h2 className="text-xl font-bold text-slate-900 flex items-center">
-            <Wrench className="mr-2 text-indigo-600 h-6 w-6" />
-            Assemble New Product
-          </h2>
+          <div>
+            <h2 className="text-xl font-bold text-slate-900 flex items-center">
+              <Wrench className="mr-2 text-indigo-600 h-6 w-6" />
+              Assemble New Product
+            </h2>
+            <Breadcrumb pageName={pageName} subPageName="New Assembly Build" />
+          </div>
           <p className="text-sm text-slate-500 mt-1">
             Select BOM and scan Hex Tags to bind components into a finished
             product.

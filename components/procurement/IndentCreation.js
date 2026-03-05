@@ -1,15 +1,18 @@
 ﻿"use client";
 
-import { CopyPlus, CheckCircle2 } from "lucide-react";
+import { useState, useMemo } from "react";
+import { PlusCircle, Search, ClipboardList, CheckCircle2 } from "lucide-react";
+import Breadcrumb from "@/components/Breadcrumb";
 
-function IndentCreation() {
+function IndentCreation({ pageName = "Procurement" }) {
   return (
     <div className="max-w-3xl">
       <div className="mb-8">
         <h2 className="text-xl font-bold text-slate-900 flex items-center">
-          <CopyPlus className="mr-2 text-indigo-600 h-6 w-6" />
-          Raise Requisition (Indent)
+          <PlusCircle className="mr-2 text-indigo-600 h-6 w-6" />
+          Raise New Material Indent
         </h2>
+        <Breadcrumb pageName={pageName} subPageName="Create Indent" />
         <p className="text-sm text-slate-500 mt-1">
           Material requisition for components reaching minimum buffer levels.
         </p>

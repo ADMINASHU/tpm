@@ -3,6 +3,7 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import dbConnect from "@/lib/db";
 import Item from "@/lib/models/Item";
+import InventoryTransaction from "@/lib/models/InventoryTransaction";
 
 export const dynamic = "force-dynamic";
 
@@ -108,18 +109,37 @@ export async function PUT(req) {
 
   const body = await req.json();
   const { _id, ...updateData } = body;
+  const factoryId = session.user.factoryId;
 
   if (!_id) {
     return NextResponse.json({ error: "Item ID is required" }, { status: 400 });
   }
 
   try {
+    const oldItem = await Item.findById(_id);
+    if (!oldItem) {
+      return NextResponse.json({ error: "Item not found" }, { status: 404 });
+    }
+
     const updatedItem = await Item.findByIdAndUpdate(_id, updateData, {
       new: true,
     });
-    if (!updatedItem) {
-      return NextResponse.json({ error: "Item not found" }, { status: 404 });
+
+    // If opening stock was JUST set or changed
+    if (updateData.openingStock !== undefined && updateData.openingStock !== oldItem.openingStock) {
+      await InventoryTransaction.create({
+        item: _id,
+        factory: factoryId,
+        type: "OPENING_STOCK",
+        quantity: updateData.openingStock,
+        balanceAfter: updatedItem.currentQuantity,
+        reference: "INITIAL_MIGRATION",
+        notes: `Opening stock initialized to ${updateData.openingStock}`,
+        performedBy: session.user.id,
+        date: updateData.openingStockDate || new Date(),
+      });
     }
+
     return NextResponse.json({ success: true, item: updatedItem });
   } catch (err) {
     return NextResponse.json({ error: err.message }, { status: 500 });

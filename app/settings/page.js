@@ -99,8 +99,6 @@ export default function SettingsPage() {
         <div className="flex-1 p-8 bg-slate-50/50">
             <div className="max-w-[1600px] mx-auto space-y-8">
 
-                <Breadcrumb pageName="System" subPageName="Preferences" />
-
                 {/* Header */}
                 <div className="flex items-center justify-between">
                     <div>
@@ -108,6 +106,7 @@ export default function SettingsPage() {
                             <SlidersHorizontal className="w-7 h-7 text-indigo-600" aria-hidden="true" />
                             System Preferences
                         </h1>
+                        <Breadcrumb pageName="System" subPageName="Preferences" />
                         <p className="text-slate-500 mt-1.5 text-sm">
                             Customize how the application looks and behaves. Preferences are saved locally per device.
                         </p>

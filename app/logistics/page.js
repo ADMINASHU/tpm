@@ -40,7 +40,6 @@ function LogisticsContent() {
   return (
     <div className="flex-1 p-8">
       <div className="max-w-[1600px] mx-auto space-y-8">
-        <Breadcrumb pageName="Logistics" subPageName={title} subtitle={subtitle} />
 
         {/* Tab switcher — mobile only */}
         <div className="md:hidden flex flex-wrap gap-1 p-1 bg-slate-200/50 rounded-xl w-fit">
@@ -49,8 +48,8 @@ function LogisticsContent() {
               key={tabKey}
               onClick={() => setActiveTab(tabKey)}
               className={`px-4 py-2 text-sm font-semibold rounded-lg transition-all ${activeTab === tabKey
-                  ? "bg-white text-indigo-700 shadow-sm ring-1 ring-slate-200"
-                  : "text-slate-500 hover:text-slate-700 hover:bg-slate-200/50"
+                ? "bg-white text-indigo-700 shadow-sm ring-1 ring-slate-200"
+                : "text-slate-500 hover:text-slate-700 hover:bg-slate-200/50"
                 }`}
             >
               {PAGE_HEADERS[tabKey].title}
@@ -59,7 +58,11 @@ function LogisticsContent() {
         </div>
 
         <div className="bg-white rounded-2xl shadow-sm border border-slate-100 p-8">
-          {activeTab === "transfer" ? <StockTransfer /> : <ExternalDispatch />}
+          {activeTab === "transfer" ? (
+            <StockTransfer pageName="Logistics" />
+          ) : (
+            <ExternalDispatch pageName="Logistics" />
+          )}
         </div>
       </div>
     </div>

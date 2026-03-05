@@ -34,7 +34,6 @@ function FinanceContent() {
 
   return (
     <div className="flex-1 p-8">
-      <Breadcrumb pageName="Finance" subPageName={title} subtitle={subtitle} />
       <div className="max-w-[1600px] mx-auto space-y-8">
         <div className="flex justify-end items-start">
           {tab === "aging" && (
@@ -47,9 +46,9 @@ function FinanceContent() {
             </button>
           )}
         </div>
-        {tab === "aging" && <AgingTab />}
-        {tab === "ledger" && <LedgerTab />}
-        {tab === "costing" && <CostingTab />}
+        {tab === "aging" && <AgingTab pageName="Finance" />}
+        {tab === "ledger" && <LedgerTab pageName="Finance" />}
+        {tab === "costing" && <CostingTab pageName="Finance" />}
       </div>
     </div>
   );

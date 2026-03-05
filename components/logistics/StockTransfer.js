@@ -1,8 +1,10 @@
 ﻿"use client";
 
-import { RefreshCw, MapPin } from "lucide-react";
+import { useState } from "react";
+import { RefreshCw, Package } from "lucide-react";
+import Breadcrumb from "@/components/Breadcrumb";
 
-function StockTransfer() {
+function StockTransfer({ pageName = "Logistics" }) {
   return (
     <div className="max-w-3xl">
       <div className="mb-8">
@@ -10,6 +12,7 @@ function StockTransfer() {
           <RefreshCw className="mr-2 text-indigo-600 h-6 w-6" aria-hidden="true" />
           Initiate Stock Transfer
         </h2>
+        <Breadcrumb pageName={pageName} subPageName="Stock Transfer" />
         <p className="text-sm text-slate-500 mt-1">
           Move components or finished goods between logical factory stores.
         </p>

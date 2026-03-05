@@ -100,17 +100,17 @@ export default function ReleasesPage() {
         <div className="flex-1 p-8 bg-slate-50/50">
             <div className="max-w-[1600px] mx-auto space-y-8">
 
-                <Breadcrumb pageName="System" subPageName="Releases" />
 
                 {/* Top bar */}
                 <div className="flex items-center justify-between">
-                    <Link
-                        href="/dashboard"
-                        className="flex items-center gap-2 text-sm font-semibold text-slate-500 hover:text-slate-800 transition-colors"
-                    >
-                        <ArrowLeft className="w-4 h-4" aria-hidden="true" />
-                        Back to Dashboard
-                    </Link>
+                    <div>
+                        <h2 className="text-lg font-bold text-slate-900">
+                            Release Notes
+                        </h2>
+
+                        <Breadcrumb pageName="System" subPageName="Releases" />
+                        <p className="text-slate-500 text-sm">History of improvements, fixes, and updates.</p>
+                    </div>
                     <Link
                         href="/guide"
                         className="flex items-center gap-2 text-sm font-semibold text-indigo-600 bg-indigo-50 hover:bg-indigo-100 px-4 py-2 rounded-xl ring-1 ring-indigo-100 transition-colors"
@@ -121,10 +121,7 @@ export default function ReleasesPage() {
                 </div>
 
                 {/* Title */}
-                <div>
-                    <h1 className="text-3xl font-black text-slate-900">Release Notes</h1>
-                    <p className="text-slate-500 text-sm mt-1.5">History of improvements, fixes, and updates.</p>
-                </div>
+
 
                 {/* Release cards — latest first */}
                 <div className="space-y-5">
