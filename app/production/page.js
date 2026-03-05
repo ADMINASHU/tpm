@@ -615,7 +615,7 @@ function ProductConfig() {
 
 function ComponentConfig() {
   const [showForm, setShowForm] = useState(false);
-  const [techSpecs, setTechSpecs] = useState([{ name: "", value: "" }]);
+  const [techSpecs, setTechSpecs] = useState([{ name: "Value", value: "" }]);
 
   // CSV Import State
   const [showCsvModal, setShowCsvModal] = useState(false);
@@ -628,6 +628,8 @@ function ComponentConfig() {
   // Form Save State
   const [isSaving, setIsSaving] = useState(false);
   const [saveError, setSaveError] = useState("");
+  const [isEditing, setIsEditing] = useState(false);
+  const [editingId, setEditingId] = useState(null);
 
   // Items List State
   const [itemsList, setItemsList] = useState([]);
@@ -688,7 +690,7 @@ function ComponentConfig() {
     description: "",
     baseUom: "",
     hsnCode: "",
-    trackingStrategy: "Bulk",
+    trackingType: "Bulk",
     mountingTechnology: "THT",
     minBufferLevel: "",
     maxBufferLevel: "",
@@ -865,10 +867,19 @@ function ComponentConfig() {
     }
     const techSpecsObj = {};
     techSpecs.forEach(({ name, value }) => {
-      if (name.trim()) techSpecsObj[name.trim()] = value.trim();
+      if (name.trim()) {
+        techSpecsObj[name.trim().toLowerCase()] = value.trim().toLowerCase();
+      }
     });
     const payload = {
       ...formData,
+      itemCode: formData.itemCode.trim().toLowerCase(),
+      itemName: formData.itemName.trim().toLowerCase(),
+      category: formData.category.trim().toLowerCase(),
+      make: formData.make.trim().toLowerCase(),
+      description: formData.description.trim().toLowerCase(),
+      baseUom: formData.baseUom.trim().toLowerCase(),
+      trackingType: formData.trackingType.trim(),
       technicalSpecs: techSpecsObj,
       minStockLevel: formData.minBufferLevel
         ? Number(formData.minBufferLevel)
@@ -877,16 +888,22 @@ function ComponentConfig() {
         ? Number(formData.maxBufferLevel)
         : 0,
     };
+    if (isEditing && editingId) {
+      payload._id = editingId;
+    }
+
     setIsSaving(true);
     try {
       const res = await fetch("/api/production/items", {
-        method: "POST",
+        method: isEditing ? "PUT" : "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload),
       });
       const json = await res.json();
       if (json.success) {
         setShowForm(false);
+        setIsEditing(false);
+        setEditingId(null);
         setSaveError("");
         setFormData({
           itemCode: "",
@@ -896,12 +913,12 @@ function ComponentConfig() {
           description: "",
           baseUom: uoms[0] || "",
           hsnCode: "",
-          trackingStrategy: "Bulk",
+          trackingType: "Bulk",
           mountingTechnology: "THT",
           minBufferLevel: "",
           maxBufferLevel: "",
         });
-        setTechSpecs([{ name: "", value: "" }]);
+        setTechSpecs([{ name: "Value", value: "" }]);
         fetchItems();
       } else {
         setSaveError(
@@ -979,6 +996,17 @@ function ComponentConfig() {
       .filter((r) => !r._error)
       .map((r) => {
         const { _rowNum, _error, ...rest } = r;
+        // Normalizing all text fields to lowercase for storage
+        if (rest.itemCode) rest.itemCode = rest.itemCode.toLowerCase();
+        if (rest.itemName) rest.itemName = rest.itemName.toLowerCase();
+        if (rest.category) rest.category = rest.category.toLowerCase();
+        if (rest.make) rest.make = rest.make.toLowerCase();
+        if (rest.description) rest.description = rest.description.toLowerCase();
+        if (rest.baseUom) rest.baseUom = rest.baseUom.toLowerCase();
+
+        if (typeof rest.technicalSpecs === "string") {
+          rest.technicalSpecs = rest.technicalSpecs.toLowerCase();
+        }
         return rest;
       });
     if (validRows.length === 0) {
@@ -1084,7 +1112,25 @@ function ComponentConfig() {
             Import CSV
           </button>
           <button
-            onClick={() => setShowForm(!showForm)}
+            onClick={() => {
+              setIsEditing(false);
+              setEditingId(null);
+              setFormData({
+                itemCode: "",
+                itemName: "",
+                category: categories[0] || "",
+                make: makes[0] || "",
+                description: "",
+                baseUom: uoms[0] || "",
+                hsnCode: "",
+                trackingType: "Bulk",
+                mountingTechnology: "THT",
+                minBufferLevel: "",
+                maxBufferLevel: "",
+              });
+              setTechSpecs([{ name: "Value", value: "" }]);
+              setShowForm(true);
+            }}
             className="flex items-center gap-2 rounded-xl bg-indigo-600 px-4 py-2 text-sm font-bold text-white hover:bg-indigo-500 transition-all shadow-sm"
           >
             + Add Component
@@ -1101,7 +1147,9 @@ function ComponentConfig() {
           <div className="bg-slate-50 border border-slate-200 rounded-2xl p-6 w-full max-w-6xl shadow-2xl my-8">
             <div className="flex justify-between items-center border-b border-slate-200 pb-4 mb-6">
               <h3 className="text-lg font-bold text-slate-900">
-                New Component Definition
+                {isEditing
+                  ? "Edit Component Profile"
+                  : "New Component Definition"}
               </h3>
               <button
                 onClick={() => setShowForm(false)}
@@ -1166,7 +1214,7 @@ function ComponentConfig() {
                 <div className="flex gap-2">
                   <input
                     type="text"
-                    className="flex-1 rounded-xl border border-slate-200 py-1.5 px-3 focus:ring-2 focus:ring-indigo-600 sm:text-sm bg-white shadow-sm"
+                    className="flex-1 rounded-xl border border-slate-200 py-1.5 px-3 focus:ring-2 focus:ring-indigo-600 sm:text-sm bg-white shadow-sm uppercase"
                     placeholder={
                       editingMakeIndex !== null
                         ? "Edit make name..."
@@ -1209,7 +1257,7 @@ function ComponentConfig() {
                   </label>
                   <input
                     type="text"
-                    className="block w-full rounded-xl border border-slate-200 py-2 px-3 focus:ring-2 focus:ring-indigo-600 sm:text-sm bg-white"
+                    className="block w-full rounded-xl border border-slate-200 py-2 px-3 focus:ring-2 focus:ring-indigo-600 sm:text-sm bg-white uppercase"
                     placeholder="e.g. 10k Ohm Resistor 1/4W"
                     value={formData.itemName}
                     onChange={(e) =>
@@ -1222,7 +1270,7 @@ function ComponentConfig() {
                     Description
                   </label>
                   <textarea
-                    className="block w-full rounded-xl border border-slate-200 py-2 px-3 focus:ring-2 focus:ring-indigo-600 sm:text-sm bg-white"
+                    className="block w-full rounded-xl border border-slate-200 py-2 px-3 focus:ring-2 focus:ring-indigo-600 sm:text-sm bg-white uppercase"
                     placeholder="Auto-generated if specs are added..."
                     rows="2"
                     value={formData.description}
@@ -1257,7 +1305,7 @@ function ComponentConfig() {
                 <div className="flex gap-2">
                   <input
                     type="text"
-                    className="flex-1 rounded-xl border border-slate-200 py-1.5 px-3 focus:ring-2 focus:ring-indigo-600 sm:text-sm bg-white shadow-sm"
+                    className="flex-1 rounded-xl border border-slate-200 py-1.5 px-3 focus:ring-2 focus:ring-indigo-600 sm:text-sm bg-white shadow-sm uppercase"
                     placeholder={
                       editingCategoryIndex !== null
                         ? "Edit category text..."
@@ -1339,7 +1387,7 @@ function ComponentConfig() {
                 <div className="flex gap-2">
                   <input
                     type="text"
-                    className="flex-1 rounded-xl border border-slate-200 py-1.5 px-3 focus:ring-2 focus:ring-indigo-600 sm:text-sm bg-white shadow-sm"
+                    className="flex-1 rounded-xl border border-slate-200 py-1.5 px-3 focus:ring-2 focus:ring-indigo-600 sm:text-sm bg-white shadow-sm uppercase"
                     placeholder={
                       editingUomIndex !== null
                         ? "Edit UOM text..."
@@ -1383,11 +1431,11 @@ function ComponentConfig() {
                   </label>
                   <select
                     className="block w-full rounded-xl border border-slate-200 py-2 px-3 focus:ring-2 focus:ring-indigo-600 sm:text-sm bg-white"
-                    value={formData.trackingStrategy}
+                    value={formData.trackingType}
                     onChange={(e) =>
                       setFormData({
                         ...formData,
-                        trackingStrategy: e.target.value,
+                        trackingType: e.target.value,
                       })
                     }
                   >
@@ -1486,7 +1534,7 @@ function ComponentConfig() {
                       <input
                         type="text"
                         placeholder="e.g. Resistance"
-                        className="flex-1 min-w-0 rounded-md border border-slate-200 py-1.5 px-2 text-xs bg-white"
+                        className="flex-1 min-w-0 rounded-md border border-slate-200 py-1.5 px-2 text-xs bg-white uppercase"
                         value={spec.name}
                         onChange={(e) => {
                           const newSpecs = [...techSpecs];
@@ -1497,7 +1545,7 @@ function ComponentConfig() {
                       <input
                         type="text"
                         placeholder="e.g. 10k Ohm"
-                        className="flex-1 min-w-0 rounded-md border border-slate-200 py-1.5 px-2 text-xs bg-white"
+                        className="flex-1 min-w-0 rounded-md border border-slate-200 py-1.5 px-2 text-xs bg-white uppercase"
                         value={spec.value}
                         onChange={(e) => {
                           const newSpecs = [...techSpecs];
@@ -1541,7 +1589,11 @@ function ComponentConfig() {
                   disabled={isSaving}
                   className="px-6 py-2 text-sm font-bold text-white bg-indigo-600 hover:bg-indigo-500 rounded-xl shadow-sm transition-colors disabled:opacity-60"
                 >
-                  {isSaving ? "Saving..." : "Save Component Master"}
+                  {isSaving
+                    ? "Processing..."
+                    : isEditing
+                      ? "Update Master"
+                      : "Save Component Master"}
                 </button>
               </div>
             </div>
@@ -1738,7 +1790,8 @@ function ComponentConfig() {
             <th className="py-3 px-4">Description / Make</th>
             <th className="py-3 px-4">Category</th>
             <th className="py-3 px-4">Tracking</th>
-            <th className="py-3 px-4 text-right">Min / Max Buffer</th>
+            <th className="py-3 px-4">Min / Max Buffer</th>
+            <th className="py-3 px-4 text-right">Actions</th>
           </tr>
         </thead>
         <tbody className="divide-y divide-slate-100 bg-white">
@@ -1803,6 +1856,52 @@ function ComponentConfig() {
                     {item.maxStockLevel || 0}
                   </span>{" "}
                   {item.baseUom}
+                </td>
+                <td className="py-3 px-4 text-right">
+                  <div className="flex justify-end gap-2">
+                    <button
+                      onClick={() => handleEdit(item)}
+                      className="p-1.5 text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 rounded-lg transition-all"
+                      title="Edit Compound"
+                    >
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        width="16"
+                        height="16"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        strokeWidth="2"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                      >
+                        <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
+                        <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
+                      </svg>
+                    </button>
+                    <button
+                      onClick={() => handleDelete(item._id)}
+                      className="p-1.5 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-all"
+                      title="Delete Forever"
+                    >
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        width="16"
+                        height="16"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        strokeWidth="2"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                      >
+                        <polyline points="3 6 5 6 21 6"></polyline>
+                        <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+                        <line x1="10" y1="11" x2="10" y2="17"></line>
+                        <line x1="14" y1="11" x2="14" y2="17"></line>
+                      </svg>
+                    </button>
+                  </div>
                 </td>
               </tr>
             ))
