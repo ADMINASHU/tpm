@@ -3,6 +3,7 @@
 import { useState, useEffect, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
 import { PlusCircle, QrCode, Search, CheckCircle2 } from "lucide-react";
+import Breadcrumb from "@/components/Breadcrumb";
 
 const PAGE_HEADERS = {
   grn: {
@@ -44,33 +45,30 @@ function InventoryContent() {
 
   return (
     <div className="flex-1 p-8">
-      <div className="max-w-6xl mx-auto space-y-8">
-        <div>
-          <h1 className="text-3xl font-bold tracking-tight text-slate-900">
-            {title}
-          </h1>
-          <p className="text-slate-500 mt-2 text-sm font-medium">{subtitle}</p>
-        </div>
+      <div className="max-w-[1600px] mx-auto space-y-8">
+        <Breadcrumb
+          pageName="Inventory"
+          subPageName={title}
+          subtitle={subtitle}
+        />
 
         {/* Tab switcher — mobile only */}
         <div className="md:hidden flex space-x-1 p-1 bg-slate-200/50 rounded-xl w-fit">
           <button
             onClick={() => setActiveTab("grn")}
-            className={`px-6 py-2.5 text-sm font-semibold rounded-lg transition-all ${
-              activeTab === "grn"
-                ? "bg-white text-indigo-700 shadow-sm ring-1 ring-slate-200"
-                : "text-slate-500 hover:text-slate-700 hover:bg-slate-200/50"
-            }`}
+            className={`px-6 py-2.5 text-sm font-semibold rounded-lg transition-all ${activeTab === "grn"
+              ? "bg-white text-indigo-700 shadow-sm ring-1 ring-slate-200"
+              : "text-slate-500 hover:text-slate-700 hover:bg-slate-200/50"
+              }`}
           >
             Quick GRN
           </button>
           <button
             onClick={() => setActiveTab("hex")}
-            className={`px-6 py-2.5 text-sm font-semibold rounded-lg transition-all ${
-              activeTab === "hex"
-                ? "bg-white text-indigo-700 shadow-sm ring-1 ring-slate-200"
-                : "text-slate-500 hover:text-slate-700 hover:bg-slate-200/50"
-            }`}
+            className={`px-6 py-2.5 text-sm font-semibold rounded-lg transition-all ${activeTab === "hex"
+              ? "bg-white text-indigo-700 shadow-sm ring-1 ring-slate-200"
+              : "text-slate-500 hover:text-slate-700 hover:bg-slate-200/50"
+              }`}
           >
             Hex Tag Indexing
           </button>
@@ -109,7 +107,7 @@ function QuickGRN() {
     <div className="max-w-2xl">
       <div className="mb-8">
         <h2 className="text-xl font-bold text-slate-900 flex items-center">
-          <PlusCircle className="mr-2 text-indigo-600 h-6 w-6" />
+          <PlusCircle className="mr-2 text-indigo-600 h-6 w-6" aria-hidden="true" />
           Quick GRN (Buffer Stock)
         </h2>
         <p className="text-sm text-slate-500 mt-1">
@@ -128,10 +126,11 @@ function QuickGRN() {
       <form className="space-y-6" onSubmit={handleSubmit}>
         <div className="grid grid-cols-2 gap-6">
           <div>
-            <label className="block text-sm font-semibold leading-6 text-slate-900 mb-1">
+            <label htmlFor="supplier-name" className="block text-sm font-semibold leading-6 text-slate-900 mb-1">
               Supplier Name
             </label>
             <input
+              id="supplier-name"
               type="text"
               required
               className="block w-full rounded-xl border-0 py-2.5 px-3 text-slate-900 shadow-sm ring-1 ring-inset ring-slate-200 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm"
@@ -139,10 +138,11 @@ function QuickGRN() {
             />
           </div>
           <div>
-            <label className="block text-sm font-semibold leading-6 text-slate-900 mb-1">
+            <label htmlFor="challan-no" className="block text-sm font-semibold leading-6 text-slate-900 mb-1">
               Challan / Invoice No.
             </label>
             <input
+              id="challan-no"
               type="text"
               required
               className="block w-full rounded-xl border-0 py-2.5 px-3 text-slate-900 shadow-sm ring-1 ring-inset ring-slate-200 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm"
@@ -150,10 +150,11 @@ function QuickGRN() {
             />
           </div>
           <div>
-            <label className="block text-sm font-semibold leading-6 text-slate-900 mb-1">
+            <label htmlFor="item-desc" className="block text-sm font-semibold leading-6 text-slate-900 mb-1">
               Item Description (General)
             </label>
             <input
+              id="item-desc"
               type="text"
               required
               className="block w-full rounded-xl border-0 py-2.5 px-3 text-slate-900 shadow-sm ring-1 ring-inset ring-slate-200 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm"
@@ -161,10 +162,11 @@ function QuickGRN() {
             />
           </div>
           <div>
-            <label className="block text-sm font-semibold leading-6 text-slate-900 mb-1">
+            <label htmlFor="qty-received" className="block text-sm font-semibold leading-6 text-slate-900 mb-1">
               Quantity Received
             </label>
             <input
+              id="qty-received"
               type="number"
               min="1"
               required
@@ -203,9 +205,10 @@ function HexIndexing() {
         </div>
 
         <div className="relative">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" aria-hidden="true" />
           <input
             type="text"
+            aria-label="Scan Hex Tag"
             className="block w-full pl-10 pr-3 py-2 rounded-xl border-0 text-slate-900 shadow-sm ring-1 ring-inset ring-slate-200 focus:ring-2 focus:ring-indigo-600 sm:text-sm"
             placeholder="Scan Hex Tag..."
             autoFocus
@@ -214,7 +217,7 @@ function HexIndexing() {
       </div>
 
       <div className="bg-slate-50 rounded-xl border border-slate-200 p-6 flex flex-col items-center justify-center text-center py-16">
-        <QrCode className="h-12 w-12 text-slate-300 mb-4" />
+        <QrCode className="h-12 w-12 text-slate-300 mb-4" aria-hidden="true" />
         <h3 className="text-slate-900 font-semibold mb-1">
           Awaiting Scanner Input
         </h3>
@@ -312,10 +315,11 @@ function TagGenerator() {
           </p>
           <input
             type="number"
+            aria-label="Number of bulk hex tags"
             defaultValue="50"
             className="block w-32 rounded-lg border-0 py-2.5 px-3 mb-4 shadow-sm ring-1 ring-inset ring-slate-200 text-sm"
           />
-          <button className="bg-indigo-600 text-white font-bold text-sm px-4 py-2 rounded-xl hover:bg-indigo-700 w-full">
+          <button type="button" className="bg-indigo-600 text-white font-bold text-sm px-4 py-2 rounded-xl hover:bg-indigo-700 w-full">
             Print Empty Hex Tags
           </button>
         </div>
@@ -328,10 +332,11 @@ function TagGenerator() {
           </p>
           <input
             type="text"
+            aria-label="Component Code"
             placeholder="Component Code"
             className="block w-full rounded-lg border-0 py-2.5 px-3 mb-4 shadow-sm ring-1 ring-inset ring-slate-200 text-sm"
           />
-          <button className="bg-slate-800 text-white font-bold text-sm px-4 py-2 rounded-xl hover:bg-slate-700 w-full">
+          <button type="button" className="bg-slate-800 text-white font-bold text-sm px-4 py-2 rounded-xl hover:bg-slate-700 w-full">
             Print Direct Tags
           </button>
         </div>

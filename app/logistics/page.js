@@ -3,6 +3,7 @@
 import { useState, useEffect, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
 import { Truck, MapPin, RefreshCw } from "lucide-react";
+import Breadcrumb from "@/components/Breadcrumb";
 
 const PAGE_HEADERS = {
   transfer: {
@@ -29,33 +30,30 @@ function LogisticsContent() {
 
   return (
     <div className="flex-1 p-8">
-      <div className="max-w-6xl mx-auto space-y-8">
-        <div>
-          <h1 className="text-3xl font-bold tracking-tight text-slate-900">
-            {title}
-          </h1>
-          <p className="text-slate-500 mt-2 text-sm font-medium">{subtitle}</p>
-        </div>
+      <div className="max-w-[1600px] mx-auto space-y-8">
+        <Breadcrumb
+          pageName="Logistics"
+          subPageName={title}
+          subtitle={subtitle}
+        />
 
         {/* Tab switcher — mobile only */}
         <div className="md:hidden flex space-x-1 p-1 bg-slate-200/50 rounded-xl w-fit">
           <button
             onClick={() => setActiveTab("transfer")}
-            className={`px-6 py-2.5 text-sm font-semibold rounded-lg transition-all ${
-              activeTab === "transfer"
-                ? "bg-white text-indigo-700 shadow-sm ring-1 ring-slate-200"
-                : "text-slate-500 hover:text-slate-700 hover:bg-slate-200/50"
-            }`}
+            className={`px-6 py-2.5 text-sm font-semibold rounded-lg transition-all ${activeTab === "transfer"
+              ? "bg-white text-indigo-700 shadow-sm ring-1 ring-slate-200"
+              : "text-slate-500 hover:text-slate-700 hover:bg-slate-200/50"
+              }`}
           >
             Internal Stock Transfer
           </button>
           <button
             onClick={() => setActiveTab("dispatch")}
-            className={`px-6 py-2.5 text-sm font-semibold rounded-lg transition-all ${
-              activeTab === "dispatch"
-                ? "bg-white text-indigo-700 shadow-sm ring-1 ring-slate-200"
-                : "text-slate-500 hover:text-slate-700 hover:bg-slate-200/50"
-            }`}
+            className={`px-6 py-2.5 text-sm font-semibold rounded-lg transition-all ${activeTab === "dispatch"
+              ? "bg-white text-indigo-700 shadow-sm ring-1 ring-slate-200"
+              : "text-slate-500 hover:text-slate-700 hover:bg-slate-200/50"
+              }`}
           >
             External Dispatch
           </button>
@@ -82,7 +80,7 @@ function StockTransfer() {
     <div className="max-w-3xl">
       <div className="mb-8">
         <h2 className="text-xl font-bold text-slate-900 flex items-center">
-          <RefreshCw className="mr-2 text-indigo-600 h-6 w-6" />
+          <RefreshCw className="mr-2 text-indigo-600 h-6 w-6" aria-hidden="true" />
           Initiate Stock Transfer
         </h2>
         <p className="text-sm text-slate-500 mt-1">
@@ -93,12 +91,12 @@ function StockTransfer() {
       <form className="space-y-6">
         <div className="grid grid-cols-2 gap-6">
           <div>
-            <label className="block text-sm font-semibold leading-6 text-slate-900 mb-1">
+            <label htmlFor="source-store" className="block text-sm font-semibold leading-6 text-slate-900 mb-1">
               Source Store
             </label>
             <div className="relative">
-              <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-slate-400" />
-              <select className="block w-full pl-10 rounded-xl border-0 py-2.5 px-3 text-slate-900 shadow-sm ring-1 ring-inset ring-slate-200 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm bg-white">
+              <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-slate-400" aria-hidden="true" />
+              <select id="source-store" className="block w-full pl-10 rounded-xl border-0 py-2.5 px-3 text-slate-900 shadow-sm ring-1 ring-inset ring-slate-200 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm bg-white">
                 <option>Raw Material Store (Bengaluru)</option>
                 <option>Production Store (Bengaluru)</option>
                 <option>Finished Goods (Bengaluru)</option>
@@ -106,12 +104,12 @@ function StockTransfer() {
             </div>
           </div>
           <div>
-            <label className="block text-sm font-semibold leading-6 text-slate-900 mb-1">
+            <label htmlFor="dest-store" className="block text-sm font-semibold leading-6 text-slate-900 mb-1">
               Destination Store
             </label>
             <div className="relative">
-              <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-slate-400" />
-              <select className="block w-full pl-10 rounded-xl border-0 py-2.5 px-3 text-slate-900 shadow-sm ring-1 ring-inset ring-slate-200 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm bg-white">
+              <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-slate-400" aria-hidden="true" />
+              <select id="dest-store" className="block w-full pl-10 rounded-xl border-0 py-2.5 px-3 text-slate-900 shadow-sm ring-1 ring-inset ring-slate-200 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm bg-white">
                 <option>Production Store (Bengaluru)</option>
                 <option>Raw Material Store (Bengaluru)</option>
                 <option>Finished Goods (Bengaluru)</option>
@@ -120,30 +118,32 @@ function StockTransfer() {
             </div>
           </div>
           <div className="col-span-2">
-            <label className="block text-sm font-semibold leading-6 text-slate-900 mb-1">
+            <label htmlFor="item-tx" className="block text-sm font-semibold leading-6 text-slate-900 mb-1">
               Item to Transfer
             </label>
             <input
+              id="item-tx"
               type="text"
               className="block w-full rounded-xl border-0 py-2.5 px-3 text-slate-900 shadow-sm ring-1 ring-inset ring-slate-200 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm"
               placeholder="Scan Hex Tag or search Bulk Name..."
             />
           </div>
           <div>
-            <label className="block text-sm font-semibold leading-6 text-slate-900 mb-1">
+            <label htmlFor="qty-tx" className="block text-sm font-semibold leading-6 text-slate-900 mb-1">
               Quantity
             </label>
             <input
+              id="qty-tx"
               type="number"
               className="block w-full rounded-xl border-0 py-2.5 px-3 text-slate-900 shadow-sm ring-1 ring-inset ring-slate-200 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm"
               placeholder="1"
             />
           </div>
           <div>
-            <label className="block text-sm font-semibold leading-6 text-slate-900 mb-1">
+            <label htmlFor="item-cond" className="block text-sm font-semibold leading-6 text-slate-900 mb-1">
               Item Condition
             </label>
-            <select className="block w-full rounded-xl border-0 py-2.5 px-3 text-slate-900 shadow-sm ring-1 ring-inset ring-slate-200 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm bg-white">
+            <select id="item-cond" className="block w-full rounded-xl border-0 py-2.5 px-3 text-slate-900 shadow-sm ring-1 ring-inset ring-slate-200 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm bg-white">
               <option value="NEW">New (Pristine)</option>
               <option value="REFURBISHED">Refurbished / Repaired</option>
               <option value="FAULTY">Faulty / Rejected</option>
@@ -169,7 +169,7 @@ function ExternalDispatch() {
     <div className="max-w-3xl">
       <div className="mb-8">
         <h2 className="text-xl font-bold text-slate-900 flex items-center">
-          <Truck className="mr-2 text-indigo-600 h-6 w-6" />
+          <Truck className="mr-2 text-indigo-600 h-6 w-6" aria-hidden="true" />
           Create Dispatch Order
         </h2>
         <p className="text-sm text-slate-500 mt-1">
@@ -181,50 +181,54 @@ function ExternalDispatch() {
       <form className="space-y-6">
         <div className="grid grid-cols-2 gap-6">
           <div>
-            <label className="block text-sm font-semibold leading-6 text-slate-900 mb-1">
+            <label htmlFor="customer-cd" className="block text-sm font-semibold leading-6 text-slate-900 mb-1">
               Customer / Consignee
             </label>
             <input
+              id="customer-cd"
               type="text"
               className="block w-full rounded-xl border-0 py-2.5 px-3 text-slate-900 shadow-sm ring-1 ring-inset ring-slate-200 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm"
               placeholder="e.g. Acme Corp"
             />
           </div>
           <div>
-            <label className="block text-sm font-semibold leading-6 text-slate-900 mb-1">
+            <label htmlFor="dispatch-from" className="block text-sm font-semibold leading-6 text-slate-900 mb-1">
               Dispatch From (Store)
             </label>
-            <select className="block w-full rounded-xl border-0 py-2.5 px-3 text-slate-900 shadow-sm ring-1 ring-inset ring-slate-200 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm bg-white">
+            <select id="dispatch-from" className="block w-full rounded-xl border-0 py-2.5 px-3 text-slate-900 shadow-sm ring-1 ring-inset ring-slate-200 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm bg-white">
               <option>Finished Goods (Bengaluru)</option>
               <option>Production Store (Bengaluru)</option>
               <option>Raw Material Store (Bengaluru)</option>
             </select>
           </div>
           <div className="col-span-2">
-            <label className="block text-sm font-semibold leading-6 text-slate-900 mb-1">
+            <label htmlFor="del-addr" className="block text-sm font-semibold leading-6 text-slate-900 mb-1">
               Delivery Address
             </label>
             <input
+              id="del-addr"
               type="text"
               className="block w-full rounded-xl border-0 py-2.5 px-3 text-slate-900 shadow-sm ring-1 ring-inset ring-slate-200 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm"
               placeholder="e.g. 12 Industrial Area, Pune, Maharashtra"
             />
           </div>
           <div>
-            <label className="block text-sm font-semibold leading-6 text-slate-900 mb-1">
+            <label htmlFor="item-serial" className="block text-sm font-semibold leading-6 text-slate-900 mb-1">
               Item / Serial No.
             </label>
             <input
+              id="item-serial"
               type="text"
               className="block w-full rounded-xl border-0 py-2.5 px-3 text-slate-900 shadow-sm ring-1 ring-inset ring-slate-200 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm"
               placeholder="Scan Serial or enter Bulk Name"
             />
           </div>
           <div>
-            <label className="block text-sm font-semibold leading-6 text-slate-900 mb-1">
+            <label htmlFor="dis-qty" className="block text-sm font-semibold leading-6 text-slate-900 mb-1">
               Quantity
             </label>
             <input
+              id="dis-qty"
               type="number"
               min="1"
               className="block w-full rounded-xl border-0 py-2.5 px-3 text-slate-900 shadow-sm ring-1 ring-inset ring-slate-200 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm"
@@ -232,10 +236,10 @@ function ExternalDispatch() {
             />
           </div>
           <div>
-            <label className="block text-sm font-semibold leading-6 text-slate-900 mb-1">
+            <label htmlFor="mod-dis" className="block text-sm font-semibold leading-6 text-slate-900 mb-1">
               Mode of Dispatch
             </label>
-            <select className="block w-full rounded-xl border-0 py-2.5 px-3 text-slate-900 shadow-sm ring-1 ring-inset ring-slate-200 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm bg-white">
+            <select id="mod-dis" className="block w-full rounded-xl border-0 py-2.5 px-3 text-slate-900 shadow-sm ring-1 ring-inset ring-slate-200 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm bg-white">
               <option>Own Vehicle</option>
               <option>Third-Party Courier</option>
               <option>Customer Pickup</option>
@@ -243,10 +247,11 @@ function ExternalDispatch() {
             </select>
           </div>
           <div>
-            <label className="block text-sm font-semibold leading-6 text-slate-900 mb-1">
+            <label htmlFor="veh-track" className="block text-sm font-semibold leading-6 text-slate-900 mb-1">
               Vehicle / Tracking No.
             </label>
             <input
+              id="veh-track"
               type="text"
               className="block w-full rounded-xl border-0 py-2.5 px-3 text-slate-900 shadow-sm ring-1 ring-inset ring-slate-200 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm"
               placeholder="e.g. KA01AB1234 or AWB-00912"
@@ -259,30 +264,33 @@ function ExternalDispatch() {
             </h3>
             <div className="grid grid-cols-3 gap-6">
               <div>
-                <label className="block text-xs font-semibold text-slate-500 mb-1">
+                <label htmlFor="fuel-s" className="block text-xs font-semibold text-slate-500 mb-1">
                   Fuel (₹)
                 </label>
                 <input
+                  id="fuel-s"
                   type="number"
                   className="block w-full rounded-xl border-0 py-2.5 px-3 text-slate-900 shadow-sm ring-1 ring-inset ring-slate-200 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm"
                   placeholder="0"
                 />
               </div>
               <div>
-                <label className="block text-xs font-semibold text-slate-500 mb-1">
+                <label htmlFor="toll-s" className="block text-xs font-semibold text-slate-500 mb-1">
                   Toll (₹)
                 </label>
                 <input
+                  id="toll-s"
                   type="number"
                   className="block w-full rounded-xl border-0 py-2.5 px-3 text-slate-900 shadow-sm ring-1 ring-inset ring-slate-200 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm"
                   placeholder="0"
                 />
               </div>
               <div>
-                <label className="block text-xs font-semibold text-slate-500 mb-1">
+                <label htmlFor="driv-s" className="block text-xs font-semibold text-slate-500 mb-1">
                   Driver Allow. (₹)
                 </label>
                 <input
+                  id="driv-s"
                   type="number"
                   className="block w-full rounded-xl border-0 py-2.5 px-3 text-slate-900 shadow-sm ring-1 ring-inset ring-slate-200 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm"
                   placeholder="0"
@@ -292,10 +300,11 @@ function ExternalDispatch() {
           </div>
 
           <div className="col-span-2">
-            <label className="block text-sm font-semibold leading-6 text-slate-900 mb-1">
+            <label htmlFor="notes" className="block text-sm font-semibold leading-6 text-slate-900 mb-1">
               Dispatch Notes
             </label>
             <textarea
+              id="notes"
               rows={3}
               className="block w-full rounded-xl border-0 py-2.5 px-3 text-slate-900 shadow-sm ring-1 ring-inset ring-slate-200 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm resize-none"
               placeholder="Any special handling instructions or reference PO number..."
@@ -308,7 +317,7 @@ function ExternalDispatch() {
             type="submit"
             className="flex items-center rounded-xl bg-indigo-600 px-6 py-2.5 text-sm font-bold text-white shadow-md hover:bg-indigo-500 transition-all"
           >
-            <Truck className="w-4 h-4 mr-2" /> Confirm Dispatch
+            <Truck className="w-4 h-4 mr-2" aria-hidden="true" /> Confirm Dispatch
           </button>
         </div>
       </form>

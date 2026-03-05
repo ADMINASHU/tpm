@@ -3,6 +3,7 @@
 import { useState, useEffect, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
 import { CopyPlus, FileText, CheckCircle2 } from "lucide-react";
+import Breadcrumb from "@/components/Breadcrumb";
 
 const PAGE_HEADERS = {
   indent: {
@@ -35,33 +36,30 @@ function ProcurementContent() {
 
   return (
     <div className="flex-1 p-8">
-      <div className="max-w-6xl mx-auto space-y-8">
-        <div>
-          <h1 className="text-3xl font-bold tracking-tight text-slate-900">
-            {title}
-          </h1>
-          <p className="text-slate-500 mt-2 text-sm font-medium">{subtitle}</p>
-        </div>
+      <div className="max-w-[1600px] mx-auto space-y-8">
+        <Breadcrumb
+          pageName="Procurement"
+          subPageName={title}
+          subtitle={subtitle}
+        />
 
         {/* Tab switcher — mobile only, desktop uses navbar dropdown */}
         <div className="md:hidden flex space-x-1 p-1 bg-slate-200/50 rounded-xl w-fit">
           <button
             onClick={() => setActiveTab("indent")}
-            className={`px-6 py-2.5 text-sm font-semibold rounded-lg transition-all ${
-              activeTab === "indent"
-                ? "bg-white text-indigo-700 shadow-sm ring-1 ring-slate-200"
-                : "text-slate-500 hover:text-slate-700 hover:bg-slate-200/50"
-            }`}
+            className={`px-6 py-2.5 text-sm font-semibold rounded-lg transition-all ${activeTab === "indent"
+              ? "bg-white text-indigo-700 shadow-sm ring-1 ring-slate-200"
+              : "text-slate-500 hover:text-slate-700 hover:bg-slate-200/50"
+              }`}
           >
             Create Indent
           </button>
           <button
             onClick={() => setActiveTab("po")}
-            className={`px-6 py-2.5 text-sm font-semibold rounded-lg transition-all ${
-              activeTab === "po"
-                ? "bg-white text-indigo-700 shadow-sm ring-1 ring-slate-200"
-                : "text-slate-500 hover:text-slate-700 hover:bg-slate-200/50"
-            }`}
+            className={`px-6 py-2.5 text-sm font-semibold rounded-lg transition-all ${activeTab === "po"
+              ? "bg-white text-indigo-700 shadow-sm ring-1 ring-slate-200"
+              : "text-slate-500 hover:text-slate-700 hover:bg-slate-200/50"
+              }`}
           >
             PO Gen & Approvals
           </button>
@@ -101,40 +99,42 @@ function IndentCreation() {
       <form className="space-y-6">
         <div className="grid grid-cols-2 gap-6">
           <div>
-            <label className="block text-sm font-semibold leading-6 text-slate-900 mb-1">
+            <label htmlFor="req-dept" className="block text-sm font-semibold leading-6 text-slate-900 mb-1">
               Requesting Department
             </label>
-            <select className="block w-full rounded-xl border-0 py-2.5 px-3 text-slate-900 shadow-sm ring-1 ring-inset ring-slate-200 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm bg-white">
+            <select id="req-dept" className="block w-full rounded-xl border-0 py-2.5 px-3 text-slate-900 shadow-sm ring-1 ring-inset ring-slate-200 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm bg-white">
               <option>Production Store</option>
               <option>Raw Material Store</option>
               <option>Projects / Setup</option>
             </select>
           </div>
           <div>
-            <label className="block text-sm font-semibold leading-6 text-slate-900 mb-1">
+            <label htmlFor="item-req" className="block text-sm font-semibold leading-6 text-slate-900 mb-1">
               Item Required
             </label>
             <input
+              id="item-req"
               type="text"
               className="block w-full rounded-xl border-0 py-2.5 px-3 text-slate-900 shadow-sm ring-1 ring-inset ring-slate-200 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm"
               placeholder="e.g. 10k Ohm Resistors"
             />
           </div>
           <div>
-            <label className="block text-sm font-semibold leading-6 text-slate-900 mb-1">
+            <label htmlFor="qty-req" className="block text-sm font-semibold leading-6 text-slate-900 mb-1">
               Quantity Requested
             </label>
             <input
+              id="qty-req"
               type="number"
               className="block w-full rounded-xl border-0 py-2.5 px-3 text-slate-900 shadow-sm ring-1 ring-inset ring-slate-200 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm"
               placeholder="1000"
             />
           </div>
           <div>
-            <label className="block text-sm font-semibold leading-6 text-slate-900 mb-1">
+            <label htmlFor="track-type" className="block text-sm font-semibold leading-6 text-slate-900 mb-1">
               Tracking Type Needed
             </label>
-            <select className="block w-full rounded-xl border-0 py-2.5 px-3 text-slate-900 shadow-sm ring-1 ring-inset ring-slate-200 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm bg-white">
+            <select id="track-type" className="block w-full rounded-xl border-0 py-2.5 px-3 text-slate-900 shadow-sm ring-1 ring-inset ring-slate-200 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm bg-white">
               <option>Bulk (Quantity only)</option>
               <option>Hex Tag (QR individual)</option>
             </select>
@@ -169,7 +169,7 @@ function IndentCreation() {
             </p>
             <p className="text-xs text-slate-500">Last checked: 10 mins ago</p>
           </div>
-          <button className="bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2 px-4 rounded-lg transition-colors shadow-sm">
+          <button type="button" className="bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2 px-4 rounded-lg transition-colors shadow-sm">
             Trigger Auto-Indent Batch
           </button>
         </div>
@@ -178,23 +178,24 @@ function IndentCreation() {
   );
 }
 
+const PENDING_INDENTS = [
+  {
+    id: "IND-2024-081",
+    dept: "Raw Material",
+    item: "Capacitors 20uF",
+    qty: 500,
+    state: "Pending",
+  },
+  {
+    id: "IND-2024-082",
+    dept: "Production",
+    item: "PCB Alpha-X",
+    qty: 25,
+    state: "Pending",
+  },
+];
+
 function POApproval() {
-  const pendingIndents = [
-    {
-      id: "IND-2024-081",
-      dept: "Raw Material",
-      item: "Capacitors 20uF",
-      qty: 500,
-      state: "Pending",
-    },
-    {
-      id: "IND-2024-082",
-      dept: "Production",
-      item: "PCB Alpha-X",
-      qty: 25,
-      state: "Pending",
-    },
-  ];
 
   return (
     <div>
@@ -233,7 +234,7 @@ function POApproval() {
             </tr>
           </thead>
           <tbody className="divide-y divide-slate-200 bg-white">
-            {pendingIndents.map((ind, i) => (
+            {PENDING_INDENTS.map((ind, i) => (
               <tr key={i} className="hover:bg-slate-50">
                 <td className="whitespace-nowrap px-6 py-4 text-sm font-semibold text-indigo-600">
                   {ind.id}
@@ -248,8 +249,8 @@ function POApproval() {
                   {ind.qty}
                 </td>
                 <td className="whitespace-nowrap px-6 py-4 text-sm">
-                  <button className="flex items-center bg-emerald-100 text-emerald-700 px-3 py-1.5 rounded-lg font-bold hover:bg-emerald-200 transition-colors">
-                    <CheckCircle2 className="w-4 h-4 mr-1" /> Split & Approve
+                  <button type="button" className="flex items-center bg-emerald-100 text-emerald-700 px-3 py-1.5 rounded-lg font-bold hover:bg-emerald-200 transition-colors">
+                    <CheckCircle2 className="w-4 h-4 mr-1" aria-hidden="true" /> Split & Approve
                     POs
                   </button>
                 </td>
@@ -262,38 +263,39 @@ function POApproval() {
   );
 }
 
+const SUPPLIERS_LIST = [
+  {
+    name: "Acme Corp",
+    category: "Electronic Components",
+    contact: "acme@supply.com",
+    rating: 5,
+    status: "Approved",
+  },
+  {
+    name: "Global Tech",
+    category: "PCB & Assemblies",
+    contact: "gt@global.com",
+    rating: 4,
+    status: "Approved",
+  },
+  {
+    name: "Electro Components",
+    category: "Passive Components",
+    contact: "info@electro.in",
+    rating: 3,
+    status: "On Hold",
+  },
+  {
+    name: "Packrite Ltd",
+    category: "Packaging Materials",
+    contact: "pack@packrite.com",
+    rating: 4,
+    status: "Approved",
+  },
+];
+
 function SupplierConfig() {
   const [showForm, setShowForm] = useState(false);
-  const suppliers = [
-    {
-      name: "Acme Corp",
-      category: "Electronic Components",
-      contact: "acme@supply.com",
-      rating: 5,
-      status: "Approved",
-    },
-    {
-      name: "Global Tech",
-      category: "PCB & Assemblies",
-      contact: "gt@global.com",
-      rating: 4,
-      status: "Approved",
-    },
-    {
-      name: "Electro Components",
-      category: "Passive Components",
-      contact: "info@electro.in",
-      rating: 3,
-      status: "On Hold",
-    },
-    {
-      name: "Packrite Ltd",
-      category: "Packaging Materials",
-      contact: "pack@packrite.com",
-      rating: 4,
-      status: "Approved",
-    },
-  ];
   const stars = (n) => "★".repeat(n) + "☆".repeat(5 - n);
   const statusColor = {
     Approved: "bg-emerald-100 text-emerald-700",
@@ -318,33 +320,38 @@ function SupplierConfig() {
           <div className="grid grid-cols-2 gap-4">
             <input
               type="text"
+              aria-label="Supplier Name"
               placeholder="Supplier Name"
               className="block w-full rounded-xl border-0 py-2.5 px-3 text-sm shadow-sm ring-1 ring-inset ring-slate-200 focus:ring-2 focus:ring-indigo-600"
             />
             <input
               type="text"
+              aria-label="Category"
               placeholder="Category (e.g. PCB & Assemblies)"
               className="block w-full rounded-xl border-0 py-2.5 px-3 text-sm shadow-sm ring-1 ring-inset ring-slate-200 focus:ring-2 focus:ring-indigo-600"
             />
             <input
               type="email"
+              aria-label="Contact Email"
               placeholder="Contact Email"
               className="block w-full rounded-xl border-0 py-2.5 px-3 text-sm shadow-sm ring-1 ring-inset ring-slate-200 focus:ring-2 focus:ring-indigo-600"
             />
             <input
               type="text"
+              aria-label="Phone or GST No."
               placeholder="Phone / GST No."
               className="block w-full rounded-xl border-0 py-2.5 px-3 text-sm shadow-sm ring-1 ring-inset ring-slate-200 focus:ring-2 focus:ring-indigo-600"
             />
           </div>
           <div className="flex justify-end gap-3">
             <button
+              type="button"
               onClick={() => setShowForm(false)}
               className="px-4 py-2 text-sm font-semibold text-slate-600 hover:bg-slate-100 rounded-xl"
             >
               Cancel
             </button>
-            <button className="px-5 py-2 text-sm font-bold text-white bg-indigo-600 hover:bg-indigo-500 rounded-xl">
+            <button type="button" className="px-5 py-2 text-sm font-bold text-white bg-indigo-600 hover:bg-indigo-500 rounded-xl">
               Save Supplier
             </button>
           </div>
@@ -362,7 +369,7 @@ function SupplierConfig() {
           </tr>
         </thead>
         <tbody className="divide-y divide-slate-50">
-          {suppliers.map((s) => (
+          {SUPPLIERS_LIST.map((s) => (
             <tr key={s.name} className="hover:bg-slate-50 transition-colors">
               <td className="py-3.5 font-bold text-slate-900">{s.name}</td>
               <td className="py-3.5 text-slate-500 text-xs">{s.category}</td>

@@ -1,8 +1,9 @@
 "use client";
 
-import { useState, useEffect, Suspense } from "react";
+import { useState, useEffect, Suspense, useMemo } from "react";
 import { useSearchParams } from "next/navigation";
 import { Wrench, Search, ArrowRight, QrCode, Database, ChevronRight, LayoutDashboard } from "lucide-react";
+import Breadcrumb from "@/components/Breadcrumb";
 
 const PAGE_HEADERS = {
   build: {
@@ -57,13 +58,11 @@ function ProductionContent() {
   return (
     <div className="flex-1 p-4 md:py-6 md:px-8">
       <div className="max-w-[1600px] mx-auto space-y-4 md:space-y-6">
-        <div className="flex items-center text-sm font-medium text-slate-600 bg-white border border-slate-200 px-4 py-2.5 rounded-xl shadow-sm w-fit">
-          <LayoutDashboard className="w-4 h-4 text-slate-400" />
-          <ChevronRight className="w-4 h-4 text-slate-300 mx-1.5" />
-          <span className="hover:text-slate-900 cursor-pointer transition-colors">Production</span>
-          <ChevronRight className="w-4 h-4 text-slate-300 mx-1.5" />
-          <span className="font-bold text-indigo-700" title={subtitle}>{title}</span>
-        </div>
+        <Breadcrumb
+          pageName="Production"
+          subPageName={title}
+          subtitle={subtitle}
+        />
 
         {/* Tab switcher — mobile only */}
         <div className="md:hidden flex flex-wrap gap-1 p-1 bg-slate-200/50 rounded-xl w-fit">
@@ -1155,18 +1154,20 @@ function ComponentConfig() {
     URL.revokeObjectURL(url);
   };
 
-  const filteredItems = itemsList.filter((item) => {
+  const filteredItems = useMemo(() => {
     const s = searchTerm.toLowerCase();
-    return (
-      item.itemCode?.toLowerCase().includes(s) ||
-      item.itemName?.toLowerCase().includes(s) ||
-      item.category?.toLowerCase().includes(s) ||
-      item.description?.toLowerCase().includes(s) ||
-      item.make?.toLowerCase().includes(s) ||
-      item.hsnCode?.toLowerCase().includes(s) ||
-      item.mountingTechnology?.toLowerCase().includes(s)
-    );
-  });
+    return itemsList.filter((item) => {
+      return (
+        item.itemCode?.toLowerCase().includes(s) ||
+        item.itemName?.toLowerCase().includes(s) ||
+        item.category?.toLowerCase().includes(s) ||
+        item.description?.toLowerCase().includes(s) ||
+        item.make?.toLowerCase().includes(s) ||
+        item.hsnCode?.toLowerCase().includes(s) ||
+        item.mountingTechnology?.toLowerCase().includes(s)
+      );
+    });
+  }, [itemsList, searchTerm]);
 
   return (
     <div className="space-y-4">
@@ -1198,6 +1199,7 @@ function ComponentConfig() {
               strokeWidth="2"
               strokeLinecap="round"
               strokeLinejoin="round"
+              aria-hidden="true"
             >
               <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
               <polyline points="7 10 12 15 17 10" />

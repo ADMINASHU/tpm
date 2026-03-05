@@ -37,7 +37,7 @@ export default function LoginPage() {
             <div className="max-w-md w-full space-y-8 bg-white p-10 rounded-3xl shadow-xl ring-1 ring-slate-100">
                 <div className="text-center flex flex-col items-center">
                     <div className="h-16 w-16 bg-indigo-50 rounded-2xl flex items-center justify-center mb-4 transition-transform hover:scale-105">
-                        <Factory className="h-8 w-8 text-indigo-600" />
+                        <Factory className="h-8 w-8 text-indigo-600" aria-hidden="true" />
                     </div>
                     <h2 className="mt-2 text-3xl font-bold tracking-tight text-slate-900">
                         Techser ERP
@@ -54,12 +54,15 @@ export default function LoginPage() {
                     )}
                     <div className="space-y-5 shadow-sm">
                         <div>
-                            <label className="block text-sm font-semibold leading-6 text-slate-900 mb-1">
+                            <label htmlFor="email" className="block text-sm font-semibold leading-6 text-slate-900 mb-1">
                                 Email address
                             </label>
                             <div>
                                 <input
+                                    id="email"
+                                    name="email"
                                     type="email"
+                                    autoComplete="email"
                                     required
                                     value={email}
                                     onChange={(e) => setEmail(e.target.value)}
@@ -69,12 +72,15 @@ export default function LoginPage() {
                             </div>
                         </div>
                         <div>
-                            <label className="block text-sm font-semibold leading-6 text-slate-900 mb-1">
+                            <label htmlFor="password" className="block text-sm font-semibold leading-6 text-slate-900 mb-1">
                                 Password
                             </label>
                             <div>
                                 <input
+                                    id="password"
+                                    name="password"
                                     type="password"
+                                    autoComplete="current-password"
                                     required
                                     value={password}
                                     onChange={(e) => setPassword(e.target.value)}

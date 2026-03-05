@@ -1,10 +1,11 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import {
     SlidersHorizontal, Database, Monitor, Bell,
     Moon, Globe, ShieldCheck, ToggleLeft, ToggleRight
 } from "lucide-react";
+import Breadcrumb from "@/components/Breadcrumb";
 
 // ── Reusable Toggle Row ──────────────────────────────────────
 function ToggleRow({ label, description, value, onChange, icon: Icon, color = "indigo" }) {
@@ -12,7 +13,7 @@ function ToggleRow({ label, description, value, onChange, icon: Icon, color = "i
         <div className="flex items-center justify-between py-4 border-b border-slate-100 last:border-0">
             <div className="flex items-center gap-3">
                 <div className={`p-2 rounded-lg bg-${color}-50 ring-1 ring-${color}-100`}>
-                    <Icon className={`w-4 h-4 text-${color}-600`} />
+                    <Icon className={`w-4 h-4 text-${color}-600`} aria-hidden="true" />
                 </div>
                 <div>
                     <p className="text-sm font-semibold text-slate-800">{label}</p>
@@ -25,8 +26,8 @@ function ToggleRow({ label, description, value, onChange, icon: Icon, color = "i
                 aria-label={`Toggle ${label}`}
             >
                 {value
-                    ? <ToggleRight className={`w-8 h-8 text-${color}-600 transition-all`} />
-                    : <ToggleLeft className="w-8 h-8 text-slate-300 transition-all" />
+                    ? <ToggleRight className={`w-8 h-8 text-${color}-600 transition-all`} aria-hidden="true" />
+                    : <ToggleLeft className="w-8 h-8 text-slate-300 transition-all" aria-hidden="true" />
                 }
             </button>
         </div>
@@ -72,30 +73,37 @@ function savePrefs(prefs) {
 
 // ── Main Page ────────────────────────────────────────────────
 export default function SettingsPage() {
-    const [prefs, setPrefs] = useState(DEFAULTS);
-    const [saved, setSaved] = useState(false);
+    const savedTimerRef = useRef(null);
 
     useEffect(() => {
         setPrefs(loadPrefs());
+        return () => {
+            if (savedTimerRef.current) clearTimeout(savedTimerRef.current);
+        };
     }, []);
 
-    const update = (key) => (val) => {
-        const next = { ...prefs, [key]: val };
-        setPrefs(next);
-        savePrefs(next);
+    const update = useCallback((key) => (val) => {
+        setPrefs(prev => {
+            const next = { ...prev, [key]: val };
+            savePrefs(next);
+            return next;
+        });
         setSaved(true);
-        setTimeout(() => setSaved(false), 2000);
-    };
+        if (savedTimerRef.current) clearTimeout(savedTimerRef.current);
+        savedTimerRef.current = setTimeout(() => setSaved(false), 2000);
+    }, []);
 
     return (
         <div className="flex-1 p-8 bg-slate-50/50">
-            <div className="max-w-2xl mx-auto space-y-8">
+            <div className="max-w-[1600px] mx-auto space-y-8">
+
+                <Breadcrumb pageName="System" subPageName="Preferences" />
 
                 {/* Header */}
                 <div className="flex items-center justify-between">
                     <div>
                         <h1 className="text-3xl font-bold tracking-tight text-slate-900 flex items-center gap-2">
-                            <SlidersHorizontal className="w-7 h-7 text-indigo-600" />
+                            <SlidersHorizontal className="w-7 h-7 text-indigo-600" aria-hidden="true" />
                             System Preferences
                         </h1>
                         <p className="text-slate-500 mt-1.5 text-sm">
@@ -153,7 +161,7 @@ export default function SettingsPage() {
                 <Section title="Security">
                     <div className="py-4 flex items-start gap-3">
                         <div className="p-2 rounded-lg bg-rose-50 ring-1 ring-rose-100">
-                            <ShieldCheck className="w-4 h-4 text-rose-600" />
+                            <ShieldCheck className="w-4 h-4 text-rose-600" aria-hidden="true" />
                         </div>
                         <div>
                             <p className="text-sm font-semibold text-slate-800">Session Protection</p>

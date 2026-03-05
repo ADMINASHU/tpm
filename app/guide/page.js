@@ -6,6 +6,7 @@ import {
     LineChart, Settings, FileBadge, QrCode, ChevronDown, ChevronRight,
     Info, AlertTriangle, CheckCircle2, Users
 } from "lucide-react";
+import Breadcrumb from "@/components/Breadcrumb";
 
 const modules = [
     {
@@ -144,7 +145,7 @@ function ModuleCard({ module }) {
             >
                 <div className="flex items-center gap-4">
                     <div className={`p-2.5 rounded-xl ring-1 ${colorMap[module.color]}`}>
-                        <Icon className={`h-5 w-5 ${iconColorMap[module.color]}`} />
+                        <Icon className={`h-5 w-5 ${iconColorMap[module.color]}`} aria-hidden="true" />
                     </div>
                     <div>
                         <h3 className="text-base font-bold text-slate-900">{module.title}</h3>
@@ -178,14 +179,14 @@ function ModuleCard({ module }) {
 
                     {module.tip && (
                         <div className="flex gap-2.5 items-start bg-blue-50 rounded-xl p-4 text-sm text-blue-800 ring-1 ring-blue-100">
-                            <Info className="h-4 w-4 text-blue-500 shrink-0 mt-0.5" />
+                            <Info className="h-4 w-4 text-blue-500 shrink-0 mt-0.5" aria-hidden="true" />
                             <span>{module.tip}</span>
                         </div>
                     )}
 
                     {module.warning && (
                         <div className="flex gap-2.5 items-start bg-amber-50 rounded-xl p-4 text-sm text-amber-800 ring-1 ring-amber-100">
-                            <AlertTriangle className="h-4 w-4 text-amber-500 shrink-0 mt-0.5" />
+                            <AlertTriangle className="h-4 w-4 text-amber-500 shrink-0 mt-0.5" aria-hidden="true" />
                             <span>{module.warning}</span>
                         </div>
                     )}
@@ -197,13 +198,15 @@ function ModuleCard({ module }) {
 
 export default function GuidePage() {
     return (
-        <div className="flex-1 p-8">
-            <div className="max-w-4xl mx-auto space-y-8">
+        <div className="flex-1 p-8 bg-slate-50/50">
+            <div className="max-w-[1600px] mx-auto space-y-8">
+
+                <Breadcrumb pageName="System" subPageName="Guide" />
 
                 {/* Header */}
                 <div className="bg-gradient-to-br from-indigo-600 to-indigo-700 rounded-2xl p-8 text-white">
                     <div className="flex items-center gap-3 mb-3">
-                        <BookOpen className="h-7 w-7 text-indigo-200" />
+                        <BookOpen className="h-7 w-7 text-indigo-200" aria-hidden="true" />
                         <h1 className="text-2xl font-bold">User Guide</h1>
                     </div>
                     <p className="text-indigo-200 text-sm leading-relaxed max-w-2xl">
@@ -219,7 +222,7 @@ export default function GuidePage() {
                             { icon: Users, text: "Data strictly isolated per factory — no cross-access" },
                         ].map(({ icon: Icon, text }, i) => (
                             <div key={i} className="flex items-center gap-2 bg-indigo-500/30 rounded-xl px-4 py-3 text-sm text-white">
-                                <Icon className="h-4 w-4 text-indigo-200 shrink-0" />
+                                <Icon className="h-4 w-4 text-indigo-200 shrink-0" aria-hidden="true" />
                                 {text}
                             </div>
                         ))}

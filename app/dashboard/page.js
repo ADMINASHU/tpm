@@ -1,8 +1,19 @@
 "use client";
 
 import { useSession } from "next-auth/react";
-import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar } from 'recharts';
+import dynamic from 'next/dynamic';
 import { PackageSearch, Boxes, IndianRupee, TrendingUp } from "lucide-react";
+
+// Dynamically import Recharts components to reduce initial bundle size (bundle-dynamic-imports)
+const DynamicAreaChart = dynamic(() => import('recharts').then(mod => mod.AreaChart), { ssr: false });
+const DynamicArea = dynamic(() => import('recharts').then(mod => mod.Area), { ssr: false });
+const DynamicXAxis = dynamic(() => import('recharts').then(mod => mod.XAxis), { ssr: false });
+const DynamicYAxis = dynamic(() => import('recharts').then(mod => mod.YAxis), { ssr: false });
+const DynamicCartesianGrid = dynamic(() => import('recharts').then(mod => mod.CartesianGrid), { ssr: false });
+const DynamicTooltip = dynamic(() => import('recharts').then(mod => mod.Tooltip), { ssr: false });
+const DynamicResponsiveContainer = dynamic(() => import('recharts').then(mod => mod.ResponsiveContainer), { ssr: false });
+const DynamicBarChart = dynamic(() => import('recharts').then(mod => mod.BarChart), { ssr: false });
+const DynamicBar = dynamic(() => import('recharts').then(mod => mod.Bar), { ssr: false });
 
 const transferPriceData = [
     { month: 'Jan', price: 1200, overhead: 150 },
@@ -25,7 +36,7 @@ export default function DashboardPage() {
 
     return (
         <div className="flex-1 p-8">
-            <div className="max-w-7xl mx-auto space-y-8">
+            <div className="max-w-[1600px] mx-auto space-y-8">
                 <div>
                     <h1 className="text-3xl font-bold tracking-tight text-slate-900">Dashboard Overview</h1>
                     <p className="text-slate-500 mt-2 text-sm font-medium">
@@ -46,41 +57,41 @@ export default function DashboardPage() {
                     <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-100 transition-shadow hover:shadow-md">
                         <h3 className="text-lg font-bold text-slate-900 mb-6">Transfer Price Trending</h3>
                         <div className="h-72">
-                            <ResponsiveContainer width="100%" height="100%">
-                                <AreaChart data={transferPriceData} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
+                            <DynamicResponsiveContainer width="100%" height="100%">
+                                <DynamicAreaChart data={transferPriceData} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
                                     <defs>
                                         <linearGradient id="colorPrice" x1="0" y1="0" x2="0" y2="1">
                                             <stop offset="5%" stopColor="#4F46E5" stopOpacity={0.15} />
                                             <stop offset="95%" stopColor="#4F46E5" stopOpacity={0} />
                                         </linearGradient>
                                     </defs>
-                                    <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e2e8f0" />
-                                    <XAxis dataKey="month" axisLine={false} tickLine={false} tick={{ fill: '#64748B', fontSize: 12, fontWeight: 500 }} dy={10} />
-                                    <YAxis axisLine={false} tickLine={false} tick={{ fill: '#64748B', fontSize: 12, fontWeight: 500 }} dx={-10} />
-                                    <Tooltip
+                                    <DynamicCartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e2e8f0" />
+                                    <DynamicXAxis dataKey="month" axisLine={false} tickLine={false} tick={{ fill: '#64748B', fontSize: 12, fontWeight: 500 }} dy={10} />
+                                    <DynamicYAxis axisLine={false} tickLine={false} tick={{ fill: '#64748B', fontSize: 12, fontWeight: 500 }} dx={-10} />
+                                    <DynamicTooltip
                                         contentStyle={{ borderRadius: '12px', border: '1px solid #f1f5f9', boxShadow: '0 10px 15px -3px rgb(0 0 0 / 0.1)' }}
                                     />
-                                    <Area type="monotone" dataKey="price" stroke="#4F46E5" strokeWidth={3} fillOpacity={1} fill="url(#colorPrice)" />
-                                </AreaChart>
-                            </ResponsiveContainer>
+                                    <DynamicArea type="monotone" dataKey="price" stroke="#4F46E5" strokeWidth={3} fillOpacity={1} fill="url(#colorPrice)" />
+                                </DynamicAreaChart>
+                            </DynamicResponsiveContainer>
                         </div>
                     </div>
 
                     <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-100 transition-shadow hover:shadow-md">
                         <h3 className="text-lg font-bold text-slate-900 mb-6">AP Aging Liability</h3>
                         <div className="h-72">
-                            <ResponsiveContainer width="100%" height="100%">
-                                <BarChart data={liabilityData} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
-                                    <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e2e8f0" />
-                                    <XAxis dataKey="bucket" axisLine={false} tickLine={false} tick={{ fill: '#64748B', fontSize: 12, fontWeight: 500 }} dy={10} />
-                                    <YAxis axisLine={false} tickLine={false} tick={{ fill: '#64748B', fontSize: 12, fontWeight: 500 }} dx={-10} />
-                                    <Tooltip
+                            <DynamicResponsiveContainer width="100%" height="100%">
+                                <DynamicBarChart data={liabilityData} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
+                                    <DynamicCartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e2e8f0" />
+                                    <DynamicXAxis dataKey="bucket" axisLine={false} tickLine={false} tick={{ fill: '#64748B', fontSize: 12, fontWeight: 500 }} dy={10} />
+                                    <DynamicYAxis axisLine={false} tickLine={false} tick={{ fill: '#64748B', fontSize: 12, fontWeight: 500 }} dx={-10} />
+                                    <DynamicTooltip
                                         cursor={{ fill: '#f8fafc' }}
                                         contentStyle={{ borderRadius: '12px', border: '1px solid #f1f5f9', boxShadow: '0 10px 15px -3px rgb(0 0 0 / 0.1)' }}
                                     />
-                                    <Bar dataKey="amount" fill="#4F46E5" radius={[6, 6, 0, 0]} barSize={40} />
-                                </BarChart>
-                            </ResponsiveContainer>
+                                    <DynamicBar dataKey="amount" fill="#4F46E5" radius={[6, 6, 0, 0]} barSize={40} />
+                                </DynamicBarChart>
+                            </DynamicResponsiveContainer>
                         </div>
                     </div>
                 </div>
@@ -92,11 +103,11 @@ export default function DashboardPage() {
 
 function StatCard({ title, value, icon: Icon, trend, trendDown }) {
     return (
-        <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-100 transition-transform hover:-translate-y-1 hover:shadow-md cursor-pointer">
+        <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-100 transition-transform hover:-translate-y-1 hover:shadow-md">
             <div className="flex items-center justify-between">
                 <h3 className="text-sm font-semibold text-slate-500">{title}</h3>
                 <div className="h-12 w-12 bg-indigo-50/80 rounded-xl flex items-center justify-center">
-                    <Icon className="h-6 w-6 text-indigo-600" />
+                    <Icon className="h-6 w-6 text-indigo-600" aria-hidden="true" />
                 </div>
             </div>
             <div className="mt-4 flex items-baseline space-x-2">
