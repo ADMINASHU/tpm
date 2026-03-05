@@ -77,11 +77,10 @@ function ProductionContent() {
             <button
               key={tabKey}
               onClick={() => setActiveTab(tabKey)}
-              className={`px-4 py-2 text-sm font-semibold rounded-lg transition-all ${
-                activeTab === tabKey
-                  ? "bg-white text-indigo-700 shadow-sm ring-1 ring-slate-200"
-                  : "text-slate-500 hover:text-slate-700 hover:bg-slate-200/50"
-              }`}
+              className={`px-4 py-2 text-sm font-semibold rounded-lg transition-all ${activeTab === tabKey
+                ? "bg-white text-indigo-700 shadow-sm ring-1 ring-slate-200"
+                : "text-slate-500 hover:text-slate-700 hover:bg-slate-200/50"
+                }`}
             >
               {PAGE_HEADERS[tabKey].title}
             </button>
@@ -155,11 +154,10 @@ function BOMConfig() {
             onClick={() => {
               if (targetProduct) setIsInitialized(true);
             }}
-            className={`font-semibold text-sm px-4 py-2 rounded-lg transition-colors ${
-              targetProduct
-                ? "bg-indigo-600 text-white hover:bg-indigo-500"
-                : "bg-slate-200 text-slate-400 cursor-not-allowed"
-            }`}
+            className={`font-semibold text-sm px-4 py-2 rounded-lg transition-colors ${targetProduct
+              ? "bg-indigo-600 text-white hover:bg-indigo-500"
+              : "bg-slate-200 text-slate-400 cursor-not-allowed"
+              }`}
             disabled={!targetProduct}
           >
             Initialize BOM Recipe
@@ -943,8 +941,8 @@ function ComponentConfig() {
       } else {
         setSaveError(
           json.results?.errors?.[0]?.error ||
-            json.error ||
-            "Save failed. Please try again.",
+          json.error ||
+          "Save failed. Please try again.",
         );
       }
     } catch {
@@ -1065,16 +1063,41 @@ function ComponentConfig() {
       .map((r) => {
         const { _rowNum, _error, ...rest } = r;
         // Normalizing all text fields to lowercase for storage
-        if (rest.itemCode) rest.itemCode = rest.itemCode.toLowerCase();
-        if (rest.itemName) rest.itemName = rest.itemName.toLowerCase();
-        if (rest.category) rest.category = rest.category.toLowerCase();
-        if (rest.make) rest.make = rest.make.toLowerCase();
-        if (rest.description) rest.description = rest.description.toLowerCase();
-        if (rest.baseUom) rest.baseUom = rest.baseUom.toLowerCase();
+        if (rest.itemCode) rest.itemCode = rest.itemCode.trim().toLowerCase();
+        if (rest.itemName) rest.itemName = rest.itemName.trim().toLowerCase();
+        if (rest.category) rest.category = rest.category.trim().toLowerCase();
+        if (rest.make) rest.make = rest.make.trim().toLowerCase();
+        if (rest.description)
+          rest.description = rest.description.trim().toLowerCase();
+        if (rest.baseUom) rest.baseUom = rest.baseUom.trim().toLowerCase();
 
-        if (typeof rest.technicalSpecs === "string") {
-          rest.technicalSpecs = rest.technicalSpecs.toLowerCase();
+        // Handle Tracking Type Normalization
+        if (rest.trackingType) {
+          const tt = rest.trackingType.trim();
+          if (tt.toLowerCase() === "serialized") {
+            rest.trackingType = "Serialized";
+          } else {
+            rest.trackingType = "Bulk";
+          }
+        } else {
+          rest.trackingType = "Bulk";
         }
+
+        // Parse technicalSpecs string into object
+        if (typeof rest.technicalSpecs === "string" && rest.technicalSpecs) {
+          const specObj = {};
+          const pairs = rest.technicalSpecs.split(";");
+          pairs.forEach((p) => {
+            const [key, val] = p.split(":");
+            if (key && val) {
+              specObj[key.trim().toLowerCase()] = val.trim().toLowerCase();
+            }
+          });
+          rest.technicalSpecs = specObj;
+        } else {
+          rest.technicalSpecs = {};
+        }
+
         return rest;
       });
     if (validRows.length === 0) {
@@ -1088,9 +1111,19 @@ function ComponentConfig() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(validRows),
       });
+      const json = await res.json();
       setUploadResult(json.results);
-      if (json.success) fetchItems();
-    } catch {
+      if (json.success) {
+        fetchItems();
+      } else {
+        setCsvError(
+          json.results?.errors?.[0]?.error ||
+          json.error ||
+          "Upload failed. Please try again.",
+        );
+      }
+    } catch (error) {
+      console.error("CSV Upload Error:", error);
       setCsvError("Upload failed. Please try again.");
     } finally {
       setIsUploading(false);

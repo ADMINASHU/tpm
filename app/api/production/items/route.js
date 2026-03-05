@@ -44,6 +44,42 @@ export async function POST(req) {
         delete itemToSave.trackingStrategy;
       }
 
+      // Backend safety: Parse technicalSpecs if it's a string
+      if (
+        typeof itemToSave.technicalSpecs === "string" &&
+        itemToSave.technicalSpecs
+      ) {
+        try {
+          const specObj = {};
+          const pairs = itemToSave.technicalSpecs.split(";");
+          pairs.forEach((p) => {
+            const [key, val] = p.split(":");
+            if (key && val) {
+              specObj[key.trim().toLowerCase()] = val.trim().toLowerCase();
+            }
+          });
+          itemToSave.technicalSpecs = specObj;
+        } catch (e) {
+          itemToSave.technicalSpecs = {};
+        }
+      }
+
+      // Auto-generate description if missing
+      if (!itemToSave.description) {
+        const specs = itemToSave.technicalSpecs || {};
+        const specString = Object.entries(specs)
+          .map(([k, v]) => `${k}: ${v}`)
+          .join(", ");
+
+        const parts = [
+          itemToSave.category,
+          itemToSave.make,
+          specString
+        ].filter(Boolean);
+
+        itemToSave.description = parts.join(" - ").toLowerCase();
+      }
+
       await Item.create({
         ...itemToSave,
         factoryId: itemToSave.factoryId || factoryId,
