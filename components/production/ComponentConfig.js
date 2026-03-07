@@ -45,13 +45,45 @@ function ComponentConfig({ pageName = "Production" }) {
   const [showSettings, setShowSettings] = useState(false);
   const [mergeDescMake, setMergeDescMake] = useState(true);
 
+  // Initialize from Local Storage on Mount (Client-Side Only)
+  useEffect(() => {
+    const savedColumns = localStorage.getItem("componentConfig_visibleColumns");
+    if (savedColumns) {
+      try {
+        setVisibleColumns(JSON.parse(savedColumns));
+      } catch (e) {
+        console.error("Failed to parse saved columns", e);
+      }
+    }
+
+    const savedMerge = localStorage.getItem("componentConfig_mergeDescMake");
+    if (savedMerge !== null) {
+      setMergeDescMake(savedMerge === "true");
+    }
+  }, []);
+
+  // Save to Local Storage on Change
+  useEffect(() => {
+    localStorage.setItem(
+      "componentConfig_visibleColumns",
+      JSON.stringify(visibleColumns),
+    );
+  }, [visibleColumns]);
+
+  useEffect(() => {
+    localStorage.setItem(
+      "componentConfig_mergeDescMake",
+      String(mergeDescMake),
+    );
+  }, [mergeDescMake]);
+
   const fetchItems = async () => {
     setIsLoadingItems(true);
     try {
       const res = await fetch("/api/production/items");
       const json = await res.json();
       if (json.success) {
-        setItemsList(json.items);
+        setItemsList(json.data || []);
       }
     } catch (error) {
       console.error("Error fetching items:", error);
@@ -164,7 +196,8 @@ function ComponentConfig({ pageName = "Production" }) {
       .filter(Boolean)
       .join(" - ");
 
-    if (autoDesc) {
+    // Only auto-generate description if one doesn't exist or we're in "New Component" mode
+    if (autoDesc && (!isEditing || !formData.description)) {
       setFormData((prev) => ({ ...prev, description: autoDesc }));
     }
   }, [techSpecs, formData.make]);
@@ -333,8 +366,8 @@ function ComponentConfig({ pageName = "Production" }) {
       } else {
         setSaveError(
           json.results?.errors?.[0]?.error ||
-          json.error ||
-          "Save failed. Please try again.",
+            json.error ||
+            "Save failed. Please try again.",
         );
       }
     } catch {
@@ -347,13 +380,29 @@ function ComponentConfig({ pageName = "Production" }) {
   const handleEdit = (item) => {
     setIsEditing(true);
     setEditingId(item._id);
+    // Normalize values to match case-sensitive options in the UI (since DB stores lowercase)
+    const normalizedCategory =
+      categories.find(
+        (c) => c.toLowerCase() === item.category?.toLowerCase(),
+      ) ||
+      item.category ||
+      "";
+    const normalizedMake =
+      makes.find((m) => m.toLowerCase() === item.make?.toLowerCase()) ||
+      item.make ||
+      "";
+    const normalizedUom =
+      uoms.find((u) => u.toLowerCase() === item.baseUom?.toLowerCase()) ||
+      item.baseUom ||
+      "";
+
     setFormData({
       itemCode: item.itemCode || "",
       itemName: item.itemName || "",
-      category: item.category || "",
-      make: item.make || "",
+      category: normalizedCategory,
+      make: normalizedMake,
       description: item.description || "",
-      baseUom: item.baseUom || "",
+      baseUom: normalizedUom,
       hsnCode: item.hsnCode || "",
       trackingType: item.trackingType || "Bulk",
       mountingTechnology: item.mountingTechnology || "THT",
@@ -510,8 +559,8 @@ function ComponentConfig({ pageName = "Production" }) {
       } else {
         setCsvError(
           json.results?.errors?.[0]?.error ||
-          json.error ||
-          "Upload failed. Please try again.",
+            json.error ||
+            "Upload failed. Please try again.",
         );
       }
     } catch (error) {
@@ -547,6 +596,7 @@ function ComponentConfig({ pageName = "Production" }) {
   };
 
   const filteredItems = useMemo(() => {
+    if (!itemsList) return [];
     const s = searchTerm.toLowerCase();
     return itemsList.filter((item) => {
       return (
@@ -1628,4 +1678,3 @@ function ComponentConfig({ pageName = "Production" }) {
 }
 
 export default ComponentConfig;
-

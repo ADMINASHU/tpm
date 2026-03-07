@@ -11,15 +11,38 @@ import { getCurrentISTDate } from "@/lib/dateUtils";
 export const dynamic = "force-dynamic";
 
 export async function GET(req) {
-  if (!process.env.MONGODB_URI) return NextResponse.json({ items: [] });
+  try {
+    if (!process.env.MONGODB_URI)
+      return NextResponse.json({ success: true, data: [] });
 
-  await dbConnect();
-  const session = await getServerSession(authOptions);
-  if (!session)
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    await dbConnect();
+    const session = await getServerSession(authOptions);
+    if (!session)
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
-  const items = await Item.find({}).lean();
-  return NextResponse.json({ success: true, items });
+    const { searchParams } = new URL(req.url);
+    const search = searchParams.get("search");
+
+    let query = {};
+    if (search) {
+      query = {
+        $or: [
+          { itemCode: { $regex: search, $options: "i" } },
+          { itemName: { $regex: search, $options: "i" } },
+          { description: { $regex: search, $options: "i" } },
+        ],
+      };
+    }
+
+    const items = await Item.find(query).limit(20).lean();
+    return NextResponse.json({ success: true, data: items });
+  } catch (error) {
+    console.error("GET /api/production/items error:", error);
+    return NextResponse.json(
+      { success: false, error: "Server Error" },
+      { status: 500 },
+    );
+  }
 }
 
 export async function POST(req) {
@@ -75,11 +98,9 @@ export async function POST(req) {
           .map(([k, v]) => `${k}: ${v}`)
           .join(", ");
 
-        const parts = [
-          itemToSave.category,
-          itemToSave.make,
-          specString
-        ].filter(Boolean);
+        const parts = [itemToSave.category, itemToSave.make, specString].filter(
+          Boolean,
+        );
 
         itemToSave.description = parts.join(" - ").toLowerCase();
       }
@@ -129,7 +150,10 @@ export async function PUT(req) {
     });
 
     // If opening stock was JUST set or changed
-    if (updateData.openingStock !== undefined && Number(updateData.openingStock) !== Number(oldItem.openingStock)) {
+    if (
+      updateData.openingStock !== undefined &&
+      Number(updateData.openingStock) !== Number(oldItem.openingStock)
+    ) {
       await InventoryTransaction.create({
         item: _id,
         factory: factoryId || oldItem.factoryId,
@@ -139,7 +163,9 @@ export async function PUT(req) {
         reference: "INITIAL_MIGRATION",
         notes: `Opening stock initialized from ${oldItem.openingStock || 0} to ${updateData.openingStock}`,
         performedBy: session.user.id,
-        date: updateData.openingStockDate ? new Date(updateData.openingStockDate) : getCurrentISTDate(),
+        date: updateData.openingStockDate
+          ? new Date(updateData.openingStockDate)
+          : getCurrentISTDate(),
       });
     }
 

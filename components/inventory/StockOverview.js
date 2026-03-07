@@ -1,7 +1,15 @@
 ﻿"use client";
 
 import { useState, useEffect, useMemo } from "react";
-import { Search, Plus, Calendar, Package, AlertCircle, CheckCircle2, X } from "lucide-react";
+import {
+  Search,
+  Plus,
+  Calendar,
+  Package,
+  AlertCircle,
+  CheckCircle2,
+  X,
+} from "lucide-react";
 import Breadcrumb from "@/components/Breadcrumb";
 import { getISODateIST } from "@/lib/dateUtils";
 
@@ -24,14 +32,14 @@ function StockOverview({ pageName = "Inventory" }) {
     try {
       const [resItems, resLogs] = await Promise.all([
         fetch("/api/production/items"),
-        fetch("/api/inventory/transactions?summary=true")
+        fetch("/api/inventory/transactions?summary=true"),
       ]);
 
       const jsonItems = await resItems.json();
       const jsonLogs = await resLogs.json();
 
       if (jsonItems.success) {
-        setItems(jsonItems.items || []);
+        setItems(jsonItems.data || []);
       }
       if (jsonLogs.success) {
         setItemsWithLogs(new Set(jsonLogs.itemIds || []));
@@ -47,17 +55,22 @@ function StockOverview({ pageName = "Inventory" }) {
     fetchStock();
   }, []);
 
-  const filteredItems = items.filter(item =>
-    item.itemCode.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    item.itemName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    item.description?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    item.category.toLowerCase().includes(searchTerm.toLowerCase())
+  const filteredItems = items.filter(
+    (item) =>
+      item.itemCode.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      item.itemName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      item.description?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      item.category.toLowerCase().includes(searchTerm.toLowerCase()),
   );
 
   const handleOpenModal = (item) => {
     setSelectedItem(item);
     setOpeningQty(item.openingStock || "");
-    setOpeningDate(item.openingStockDate ? getISODateIST(item.openingStockDate) : getISODateIST());
+    setOpeningDate(
+      item.openingStockDate
+        ? getISODateIST(item.openingStockDate)
+        : getISODateIST(),
+    );
     setSaveStatus(null);
     setShowModal(true);
   };
@@ -80,22 +93,31 @@ function StockOverview({ pageName = "Inventory" }) {
           _id: selectedItem._id,
           openingStock: newOpening,
           openingStockDate: openingDate,
-          currentQuantity: (selectedItem.currentQuantity || 0) + diff
+          currentQuantity: (selectedItem.currentQuantity || 0) + diff,
         }),
       });
 
       const json = await res.json();
       if (json.success) {
-        setSaveStatus({ type: 'success', message: "Opening stock updated successfully and logged." });
+        setSaveStatus({
+          type: "success",
+          message: "Opening stock updated successfully and logged.",
+        });
         setTimeout(() => {
           setShowModal(false);
           fetchStock(); // This will refresh itemsWithLogs as well
         }, 1500);
       } else {
-        setSaveStatus({ type: 'error', message: json.error || "Failed to update stock." });
+        setSaveStatus({
+          type: "error",
+          message: json.error || "Failed to update stock.",
+        });
       }
     } catch (error) {
-      setSaveStatus({ type: 'error', message: "An error occurred while saving." });
+      setSaveStatus({
+        type: "error",
+        message: "An error occurred while saving.",
+      });
     } finally {
       setIsSaving(false);
     }
@@ -117,7 +139,9 @@ function StockOverview({ pageName = "Inventory" }) {
           </div>
           <p className="text-sm font-semibold text-slate-600">
             Total Unique Items:{" "}
-            <span className="font-bold text-slate-900 text-lg">{items.length}</span>
+            <span className="font-bold text-slate-900 text-lg">
+              {items.length}
+            </span>
           </p>
         </div>
         <div className="relative w-full sm:w-80">
@@ -148,19 +172,27 @@ function StockOverview({ pageName = "Inventory" }) {
                 <td colSpan="4" className="py-20 text-center">
                   <div className="flex flex-col items-center gap-3">
                     <div className="w-8 h-8 border-4 border-indigo-600 border-t-transparent rounded-full animate-spin"></div>
-                    <p className="text-slate-400 font-medium">Fetching inventory data...</p>
+                    <p className="text-slate-400 font-medium">
+                      Fetching inventory data...
+                    </p>
                   </div>
                 </td>
               </tr>
             ) : filteredItems.length === 0 ? (
               <tr>
-                <td colSpan="4" className="py-20 text-center text-slate-400 italic">
+                <td
+                  colSpan="4"
+                  className="py-20 text-center text-slate-400 italic"
+                >
                   No items found matching your search.
                 </td>
               </tr>
             ) : (
               filteredItems.map((item) => (
-                <tr key={item._id} className="hover:bg-slate-50/80 transition-colors group">
+                <tr
+                  key={item._id}
+                  className="hover:bg-slate-50/80 transition-colors group"
+                >
                   <td className="py-4 px-6">
                     <div className="flex flex-col">
                       <span className="font-mono font-bold text-indigo-600 text-xs">
@@ -182,14 +214,20 @@ function StockOverview({ pageName = "Inventory" }) {
                     </div>
                   </td>
                   <td className="py-4 px-6 text-right">
-                    <span className={`text-base font-black ${(item.currentQuantity || 0) <= (item.minStockLevel || 0)
-                      ? 'text-rose-600'
-                      : (item.currentQuantity || 0) > (item.maxStockLevel || 1000)
-                        ? 'text-indigo-600'
-                        : 'text-emerald-600'
-                      }`}>
+                    <span
+                      className={`text-base font-black ${
+                        (item.currentQuantity || 0) <= (item.minStockLevel || 0)
+                          ? "text-rose-600"
+                          : (item.currentQuantity || 0) >
+                              (item.maxStockLevel || 1000)
+                            ? "text-indigo-600"
+                            : "text-emerald-600"
+                      }`}
+                    >
                       {Number(item.currentQuantity || 0).toLocaleString()}
-                      <span className="text-[10px] ml-1 font-bold text-slate-400 uppercase">{item.baseUom || "Nos"}</span>
+                      <span className="text-[10px] ml-1 font-bold text-slate-400 uppercase">
+                        {item.baseUom || "Nos"}
+                      </span>
                     </span>
                   </td>
                   <td className="py-4 px-6 text-right">
@@ -228,14 +266,23 @@ function StockOverview({ pageName = "Inventory" }) {
 
             <form onSubmit={handleSaveOpeningStock} className="p-6 space-y-5">
               <div className="p-4 bg-indigo-50 border border-indigo-100 rounded-xl">
-                <p className="text-[10px] font-bold text-indigo-400 uppercase tracking-widest mb-1">Item Identity</p>
-                <p className="text-sm font-black text-indigo-900">{selectedItem?.itemName}</p>
-                <p className="text-[11px] font-mono text-indigo-600 mt-0.5">{selectedItem?.itemCode}</p>
+                <p className="text-[10px] font-bold text-indigo-400 uppercase tracking-widest mb-1">
+                  Item Identity
+                </p>
+                <p className="text-sm font-black text-indigo-900">
+                  {selectedItem?.itemName}
+                </p>
+                <p className="text-[11px] font-mono text-indigo-600 mt-0.5">
+                  {selectedItem?.itemCode}
+                </p>
               </div>
 
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-1.5">
-                  <label htmlFor="qty" className="text-xs font-bold text-slate-500 uppercase tracking-wider flex items-center gap-1.5">
+                  <label
+                    htmlFor="qty"
+                    className="text-xs font-bold text-slate-500 uppercase tracking-wider flex items-center gap-1.5"
+                  >
                     <Package className="w-3 h-3" /> Quantity
                   </label>
                   <input
@@ -251,7 +298,10 @@ function StockOverview({ pageName = "Inventory" }) {
                   />
                 </div>
                 <div className="space-y-1.5">
-                  <label htmlFor="date" className="text-xs font-bold text-slate-500 uppercase tracking-wider flex items-center gap-1.5">
+                  <label
+                    htmlFor="date"
+                    className="text-xs font-bold text-slate-500 uppercase tracking-wider flex items-center gap-1.5"
+                  >
                     <Calendar className="w-3 h-3" /> Entry Date
                   </label>
                   <input
@@ -267,9 +317,18 @@ function StockOverview({ pageName = "Inventory" }) {
               </div>
 
               {saveStatus && (
-                <div className={`flex items-start gap-3 p-4 rounded-xl ${saveStatus.type === 'success' ? 'bg-emerald-50 text-emerald-700 border border-emerald-100' : 'bg-rose-50 text-rose-700 border border-rose-100'
-                  }`}>
-                  {saveStatus.type === 'success' ? <CheckCircle2 className="w-4 h-4 shrink-0 mt-0.5" /> : <AlertCircle className="w-4 h-4 shrink-0 mt-0.5" />}
+                <div
+                  className={`flex items-start gap-3 p-4 rounded-xl ${
+                    saveStatus.type === "success"
+                      ? "bg-emerald-50 text-emerald-700 border border-emerald-100"
+                      : "bg-rose-50 text-rose-700 border border-rose-100"
+                  }`}
+                >
+                  {saveStatus.type === "success" ? (
+                    <CheckCircle2 className="w-4 h-4 shrink-0 mt-0.5" />
+                  ) : (
+                    <AlertCircle className="w-4 h-4 shrink-0 mt-0.5" />
+                  )}
                   <p className="text-sm font-semibold">{saveStatus.message}</p>
                 </div>
               )}
@@ -303,4 +362,3 @@ function StockOverview({ pageName = "Inventory" }) {
   );
 }
 export default StockOverview;
-
