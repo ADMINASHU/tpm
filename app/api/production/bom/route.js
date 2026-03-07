@@ -179,7 +179,18 @@ export async function DELETE(req) {
       );
     }
 
-    const deletedBom = await BOM.findOneAndDelete({ _id: id, factoryId });
+    const query = factoryId
+      ? {
+          _id: id,
+          $or: [
+            { factoryId },
+            { factoryId: { $exists: false } },
+            { factoryId: null },
+          ],
+        }
+      : { _id: id };
+
+    const deletedBom = await BOM.findOneAndDelete(query);
 
     if (!deletedBom) {
       return NextResponse.json(

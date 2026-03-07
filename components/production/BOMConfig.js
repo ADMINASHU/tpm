@@ -27,8 +27,13 @@ function BOMConfig({ pageName = "Production" }) {
   const [isSaving, setIsSaving] = useState(false);
   const [saveMessage, setSaveMessage] = useState({ type: "", text: "" });
   const [itemsList, setItemsList] = useState([]);
+  const [productsList, setProductsList] = useState([]);
   const [isLoadingItems, setIsLoadingItems] = useState(false);
   const [editingBomId, setEditingBomId] = useState(null);
+
+  const [targetProductName, setTargetProductName] = useState("");
+  const [isTargetProductDropdownOpen, setIsTargetProductDropdownOpen] =
+    useState(false);
 
   // System Config States
   const [systemCategories, setSystemCategories] = useState([]);
@@ -57,18 +62,26 @@ function BOMConfig({ pageName = "Production" }) {
     showMakeDropdown: false,
   });
 
-  // Fetch Items for Search & Saved BOMs
   useEffect(() => {
-    const fetchItems = async () => {
+    const fetchItemsAndProducts = async () => {
       setIsLoadingItems(true);
       try {
-        const res = await fetch("/api/production/items");
-        const json = await res.json();
-        if (json.success) {
-          setItemsList(json.data || []);
+        const [itemsRes, productsRes] = await Promise.all([
+          fetch("/api/production/items"),
+          fetch("/api/production/products"),
+        ]);
+
+        const itemsJson = await itemsRes.json();
+        const productsJson = await productsRes.json();
+
+        if (itemsJson.success) {
+          setItemsList(itemsJson.data || []);
+        }
+        if (productsJson.success) {
+          setProductsList(productsJson.data || []);
         }
       } catch (error) {
-        console.error("Error fetching items:", error);
+        console.error("Error fetching items/products:", error);
       } finally {
         setIsLoadingItems(false);
       }
@@ -87,7 +100,7 @@ function BOMConfig({ pageName = "Production" }) {
       }
     };
 
-    fetchItems();
+    fetchItemsAndProducts();
     fetchSystemConfig();
     fetchSavedBOMs();
   }, []);
@@ -328,6 +341,7 @@ function BOMConfig({ pageName = "Production" }) {
     setDocumentNo(bom.bomNumber);
     setVersion(bom.version);
     setTargetProduct(bom.targetProduct);
+    setTargetProductName(bom.targetProduct);
     setTargetType(bom.targetType);
 
     // Convert DB components mapping back to form state
@@ -634,6 +648,7 @@ function BOMConfig({ pageName = "Production" }) {
                   setIsInitialized(false);
                   setMaterials([]);
                   setTargetProduct("");
+                  setTargetProductName("");
                   setDocumentNo("");
                   setVersion("1.0");
                   setEditingBomId(null);
@@ -959,29 +974,150 @@ function BOMConfig({ pageName = "Production" }) {
                     <div className="grid grid-cols-1 gap-4">
                       <div>
                         <label className="block text-sm font-semibold text-slate-700 mb-1.5">
-                          Target Product Name
-                          <span className="text-red-500 ml-1">*</span>
-                        </label>
-                        <input
-                          type="text"
-                          value={targetProduct}
-                          onChange={(e) => setTargetProduct(e.target.value)}
-                          placeholder="Target Product Name"
-                          className="block w-full rounded-xl border border-slate-200 py-3 px-4 text-sm shadow-sm bg-white focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors outline-none"
-                        />
-                      </div>
-                      <div>
-                        <label className="block text-sm font-semibold text-slate-700 mb-1.5">
                           Target Type
                         </label>
                         <select
                           value={targetType}
-                          onChange={(e) => setTargetType(e.target.value)}
+                          onChange={(e) => {
+                            setTargetType(e.target.value);
+                            setTargetProduct("");
+                            setTargetProductName("");
+                          }}
                           className="block w-full rounded-xl border border-slate-200 py-3 px-4 text-sm shadow-sm bg-white focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors outline-none"
                         >
-                          <option>Finished_Product</option>
-                          <option>Spare_Part</option>
+                          <option value="Finished_Product">
+                            Finished_Product
+                          </option>
+                          <option value="Spare_Part">Spare_Part</option>
                         </select>
+                      </div>
+
+                      <div>
+                        <label className="block text-sm font-semibold text-slate-700 mb-1.5">
+                          Target Product Name
+                          <span className="text-red-500 ml-1">*</span>
+                        </label>
+                        <div className="relative">
+                          <Search className="absolute left-3 top-3 h-5 w-5 text-slate-400" />
+                          <input
+                            type="text"
+                            placeholder={
+                              targetType === "Finished_Product"
+                                ? "Search configured products..."
+                                : "Search spare configurations..."
+                            }
+                            value={targetProductName}
+                            onChange={(e) => {
+                              setTargetProductName(e.target.value);
+                              setIsTargetProductDropdownOpen(true);
+                              // clear the actual stored ID if they start typing again
+                              if (targetProduct) {
+                                setTargetProduct("");
+                              }
+                            }}
+                            onFocus={() => setIsTargetProductDropdownOpen(true)}
+                            className={`block w-full rounded-xl border py-3 pl-10 pr-4 text-sm shadow-sm transition-colors outline-none ${targetProduct ? "bg-emerald-50 border-emerald-200 text-emerald-900 focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500" : "bg-white border-slate-200 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"}`}
+                            autoComplete="off"
+                          />
+                          {targetProduct && (
+                            <Check className="absolute right-3 top-3 h-5 w-5 text-emerald-600" />
+                          )}
+                        </div>
+
+                        {/* Search Dropdown for Target Product */}
+                        {isTargetProductDropdownOpen && (
+                          <div
+                            className="absolute z-50 mt-1 w-[80%] max-w-lg bg-white shadow-2xl rounded-xl py-2 text-sm ring-1 ring-black ring-opacity-5 max-h-64 overflow-y-auto"
+                            onMouseLeave={() =>
+                              setIsTargetProductDropdownOpen(false)
+                            }
+                          >
+                            {(targetType === "Finished_Product"
+                              ? productsList
+                              : (itemsList || []).filter(
+                                  (i) => i.category === "Spares",
+                                )
+                            )
+                              .filter((item) => {
+                                const s = targetProductName.toLowerCase();
+                                if (targetType === "Finished_Product") {
+                                  return (
+                                    item.serialNumber
+                                      ?.toLowerCase()
+                                      .includes(s) ||
+                                    item.productName
+                                      ?.toLowerCase()
+                                      .includes(s) ||
+                                    item.modelAndSeries
+                                      ?.toLowerCase()
+                                      .includes(s)
+                                  );
+                                } else {
+                                  return (
+                                    item.itemCode?.toLowerCase().includes(s) ||
+                                    item.itemName?.toLowerCase().includes(s)
+                                  );
+                                }
+                              })
+                              .slice(0, 15)
+                              .map((item) => (
+                                <div
+                                  key={item._id}
+                                  onClick={() => {
+                                    if (targetType === "Finished_Product") {
+                                      setTargetProduct(item.productName); // Keep using the name as the identifier for now, as that's how it's saved in BOMs traditionally, or switch to _id depending on backend schema. Using Name for display parity.
+                                      setTargetProductName(item.productName);
+                                    } else {
+                                      setTargetProduct(item.itemName);
+                                      setTargetProductName(item.itemName);
+                                    }
+                                    setIsTargetProductDropdownOpen(false);
+                                  }}
+                                  className="cursor-pointer select-none relative py-3 pl-4 pr-9 hover:bg-slate-50 transition-colors border-b border-slate-50 last:border-0"
+                                >
+                                  <div className="flex flex-col">
+                                    <span className="font-bold text-slate-900 text-sm">
+                                      {targetType === "Finished_Product"
+                                        ? item.serialNumber
+                                        : item.itemCode}
+                                    </span>
+                                    <span className="text-slate-500 text-xs mt-0.5 truncate max-w-[400px]">
+                                      {targetType === "Finished_Product"
+                                        ? item.productName
+                                        : item.itemName}
+                                    </span>
+                                  </div>
+                                </div>
+                              ))}
+                            {/* Empty state */}
+                            {(targetType === "Finished_Product"
+                              ? productsList
+                              : (itemsList || []).filter(
+                                  (i) => i.category === "Spares",
+                                )
+                            ).filter((item) => {
+                              const s = targetProductName.toLowerCase();
+                              if (targetType === "Finished_Product") {
+                                return (
+                                  item.serialNumber
+                                    ?.toLowerCase()
+                                    .includes(s) ||
+                                  item.productName?.toLowerCase().includes(s) ||
+                                  item.modelAndSeries?.toLowerCase().includes(s)
+                                );
+                              } else {
+                                return (
+                                  item.itemCode?.toLowerCase().includes(s) ||
+                                  item.itemName?.toLowerCase().includes(s)
+                                );
+                              }
+                            }).length === 0 && (
+                              <div className="px-4 py-3 text-rose-500 font-medium bg-rose-50 text-center">
+                                No matching configuration found.
+                              </div>
+                            )}
+                          </div>
+                        )}
                       </div>
                     </div>
                   </div>
@@ -995,6 +1131,7 @@ function BOMConfig({ pageName = "Production" }) {
                     if (targetProduct && documentNo && version) {
                       setIsInitialized(true);
                       setIsRecipeModalOpen(false);
+                      setTargetProductName(""); // Reset the search input for next time since we use targetProduct to hold the val
                     }
                   }}
                   disabled={!targetProduct || !documentNo || !version}
