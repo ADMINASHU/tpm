@@ -15,11 +15,9 @@ export async function GET(req) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
     const factoryId = session?.user?.factoryId;
-    const boms = await BOM.find({ factoryId, isActive: true })
-      .populate(
-        "components.itemId",
-        "itemCode itemName description make baseUom",
-      )
+    const boms = await BOM.find({ factoryId })
+      .populate("components.configId")
+      .sort({ updatedAt: -1 })
       .lean();
 
     return NextResponse.json({ success: true, data: boms });
@@ -44,6 +42,8 @@ export async function POST(req) {
 
     if (
       !body.targetProduct ||
+      !body.targetConfigId ||
+      !body.targetConfigModel ||
       !body.targetType ||
       !body.bomNumber ||
       !body.version ||
@@ -56,24 +56,11 @@ export async function POST(req) {
       );
     }
 
-    // Check for existing active BOM for this product to automatically version up
-    const existingBom = await BOM.findOne({
-      targetProduct: body.targetProduct,
-      factoryId,
-    }).sort({ version: -1 });
-    const newVersion = existingBom ? existingBom.version + 1 : 1;
-
-    // Optional: Mark previous versions as inactive if creating a new version for the same product
-    if (existingBom) {
-      await BOM.updateMany(
-        { targetProduct: body.targetProduct, factoryId },
-        { $set: { isActive: false } },
-      );
-    }
-
     const newBom = await BOM.create({
       bomNumber: body.bomNumber,
       targetProduct: body.targetProduct,
+      targetConfigId: body.targetConfigId,
+      targetConfigModel: body.targetConfigModel,
       targetType: body.targetType,
       components: body.components,
       version: body.version,
@@ -105,7 +92,7 @@ export async function PUT(req) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
     const body = await req.json();
-    const { _id, components, targetProduct, targetType, bomNumber, version } =
+    const { _id, components, targetProduct, targetConfigId, targetConfigModel, targetType, bomNumber, version } =
       body;
     const factoryId = session?.user?.factoryId;
 
@@ -118,6 +105,8 @@ export async function PUT(req) {
 
     if (
       !targetProduct ||
+      !targetConfigId ||
+      !targetConfigModel ||
       !targetType ||
       !bomNumber ||
       !version ||
@@ -138,10 +127,12 @@ export async function PUT(req) {
           version,
           components,
           targetProduct,
+          targetConfigId,
+          targetConfigModel,
           targetType,
         },
       },
-      { new: true },
+      { returnDocument: "after" },
     );
 
     if (!updatedBom) {
@@ -181,13 +172,13 @@ export async function DELETE(req) {
 
     const query = factoryId
       ? {
-          _id: id,
-          $or: [
-            { factoryId },
-            { factoryId: { $exists: false } },
-            { factoryId: null },
-          ],
-        }
+        _id: id,
+        $or: [
+          { factoryId },
+          { factoryId: { $exists: false } },
+          { factoryId: null },
+        ],
+      }
       : { _id: id };
 
     const deletedBom = await BOM.findOneAndDelete(query);

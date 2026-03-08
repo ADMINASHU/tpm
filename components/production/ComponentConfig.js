@@ -1,6 +1,6 @@
 ﻿"use client";
 
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo, useRef } from "react";
 import Breadcrumb from "@/components/Breadcrumb";
 
 function ComponentConfig({ pageName = "Production" }) {
@@ -13,7 +13,7 @@ function ComponentConfig({ pageName = "Production" }) {
   const [csvError, setCsvError] = useState("");
   const [isUploading, setIsUploading] = useState(false);
   const [uploadResult, setUploadResult] = useState(null);
-  const csvInputRef = useState(null);
+  const csvInputRef = useRef(null);
 
   // Form Save State
   const [isSaving, setIsSaving] = useState(false);
@@ -80,7 +80,7 @@ function ComponentConfig({ pageName = "Production" }) {
   const fetchItems = async () => {
     setIsLoadingItems(true);
     try {
-      const res = await fetch("/api/production/items");
+      const res = await fetch("/api/production/config/components");
       const json = await res.json();
       if (json.success) {
         setItemsList(json.data || []);
@@ -337,7 +337,7 @@ function ComponentConfig({ pageName = "Production" }) {
 
     setIsSaving(true);
     try {
-      const res = await fetch("/api/production/items", {
+      const res = await fetch(isEditing ? `/api/production/config/components?id=${editingId}` : "/api/production/config/components", {
         method: isEditing ? "PUT" : "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload),
@@ -366,8 +366,8 @@ function ComponentConfig({ pageName = "Production" }) {
       } else {
         setSaveError(
           json.results?.errors?.[0]?.error ||
-            json.error ||
-            "Save failed. Please try again.",
+          json.error ||
+          "Save failed. Please try again.",
         );
       }
     } catch {
@@ -427,7 +427,7 @@ function ComponentConfig({ pageName = "Production" }) {
   const handleDelete = async (id) => {
     if (!confirm("Are you sure you want to delete this component?")) return;
     try {
-      const res = await fetch(`/api/production/items?id=${id}`, {
+      const res = await fetch(`/api/production/config/components?id=${id}`, {
         method: "DELETE",
       });
       const json = await res.json();
@@ -559,8 +559,8 @@ function ComponentConfig({ pageName = "Production" }) {
       } else {
         setCsvError(
           json.results?.errors?.[0]?.error ||
-            json.error ||
-            "Upload failed. Please try again.",
+          json.error ||
+          "Upload failed. Please try again.",
         );
       }
     } catch (error) {

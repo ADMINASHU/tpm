@@ -18,16 +18,18 @@ export async function GET(req) {
 
     const { searchParams } = new URL(req.url);
     const search = searchParams.get("search");
+    const category = searchParams.get("category");
 
     let query = {};
     if (search) {
-      query = {
-        $or: [
-          { serialNumber: { $regex: search, $options: "i" } },
-          { productName: { $regex: search, $options: "i" } },
-          { modelAndSeries: { $regex: search, $options: "i" } },
-        ],
-      };
+      query.$or = [
+        { serialNumber: { $regex: search, $options: "i" } },
+        { productName: { $regex: search, $options: "i" } },
+        { modelAndSeries: { $regex: search, $options: "i" } },
+      ];
+    }
+    if (category) {
+      query.category = category;
     }
 
     const products = await FinishedProduct.find(query).limit(50).lean();
@@ -56,7 +58,11 @@ export async function POST(req) {
   try {
     // If multiple products are sent, only handle the first one for now (or loop if needed)
     // The UI currently saves one at a time.
-    const productToSave = { ...body, factoryId: body.factoryId || factoryId };
+    const productToSave = {
+      ...body,
+      factoryId: body.factoryId || factoryId,
+      category: body.category || "Product_Config"
+    };
 
     // Defaulting financial values to 0 if not provided, as they are required by schema
     if (productToSave.laborCost === undefined) productToSave.laborCost = 0;

@@ -1,8 +1,9 @@
-
-
-
-
-
+// remeber future used :
+// laborCost: { type: Number, required: true },
+// overheadCost: { type: Number, required: true },
+// logisticsSurcharge: { type: Number, default: 0 },
+// marginPercent: { type: Number, default: 0 },
+// transferPrice: { type: Number, required: true },
 
 
 

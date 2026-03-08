@@ -36,15 +36,26 @@ function SupplierConfig({ pageName = "Procurement" }) {
   const [suppliers, setSuppliers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
+  const [isEditing, setIsEditing] = useState(false);
+  const [editingId, setEditingId] = useState(null);
   const [saveMessage, setSaveMessage] = useState({ type: "", text: "" });
 
   // Supplier Form State
   const [newSupplier, setNewSupplier] = useState({
     name: "",
+    supplierCode: "",
     contactEmail: "",
     gstNumber: "",
-    category: "",
+    address: "",
+    contactPerson: "",
+    phone: "",
+    jurisdiction: "",
+    priceBasis: "",
+    packingInstructions: "",
+    inspectionTerms: "",
+    paymentTerms: "",
     paymentTermsDays: 30,
+    status: "Approved",
   });
 
   // Rate Card Management States
@@ -57,6 +68,7 @@ function SupplierConfig({ pageName = "Procurement" }) {
     itemId: "",
     itemName: "",
     itemCode: "",
+    category: "",
     searchQuery: "",
     supplierItemName: "",
     hsnCode: "",
@@ -69,6 +81,7 @@ function SupplierConfig({ pageName = "Procurement" }) {
 
   // Search Items List
   const [itemsList, setItemsList] = useState([]);
+  const [availableCategories, setAvailableCategories] = useState([]);
   const [isLoadingItems, setIsLoadingItems] = useState(false);
 
   // Price Trend Modal
@@ -77,7 +90,20 @@ function SupplierConfig({ pageName = "Procurement" }) {
 
   useEffect(() => {
     fetchSuppliers();
+    fetchCategories();
   }, []);
+
+  const fetchCategories = async () => {
+    try {
+      const res = await fetch("/api/config/component");
+      const json = await res.json();
+      if (json.success && json.data) {
+        setAvailableCategories(json.data.categories || []);
+      }
+    } catch (error) {
+      console.error("Failed to load categories:", error);
+    }
+  };
 
   const fetchSuppliers = async () => {
     try {
@@ -97,54 +123,143 @@ function SupplierConfig({ pageName = "Procurement" }) {
   const handleSaveSupplier = async (e) => {
     e.preventDefault();
     try {
-      const res = await fetch("/api/procurement/suppliers", {
-        method: "POST",
+      const url = isEditing
+        ? `/api/procurement/suppliers/${editingId}`
+        : "/api/procurement/suppliers";
+      const method = isEditing ? "PUT" : "POST";
+
+      const res = await fetch(url, {
+        method: method,
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(newSupplier),
       });
       const data = await res.json();
+
       if (data.success) {
         setSaveMessage({
           type: "success",
-          text: "Supplier added successfully!",
+          text: isEditing
+            ? "Supplier updated successfully!"
+            : "Supplier registered successfully!",
         });
+        fetchSuppliers();
         setNewSupplier({
           name: "",
+          supplierCode: "",
           contactEmail: "",
           gstNumber: "",
-          category: "",
+          address: "",
+          contactPerson: "",
+          phone: "",
+          jurisdiction: "",
+          priceBasis: "",
+          packingInstructions: "",
+          inspectionTerms: "",
+          paymentTerms: "",
           paymentTermsDays: 30,
+          status: "Approved",
         });
         setShowForm(false);
-        fetchSuppliers();
+        setIsEditing(false);
+        setEditingId(null);
       } else {
-        setSaveMessage({ type: "error", text: data.error || "Failed to save" });
+        setSaveMessage({
+          type: "error",
+          text: data.error || "Execution failed",
+        });
       }
     } catch (error) {
       setSaveMessage({ type: "error", text: "Connection error" });
     }
   };
 
-  // Item Search Logic (Same as BOMConfig)
+  const handleEdit = (supplier) => {
+    setNewSupplier({
+      name: supplier.name || "",
+      supplierCode: supplier.supplierCode || "",
+      contactEmail: supplier.contactEmail || "",
+      gstNumber: supplier.gstNumber || "",
+      address: supplier.address || "",
+      contactPerson: supplier.contactPerson || "",
+      phone: supplier.phone || "",
+      jurisdiction: supplier.jurisdiction || "",
+      priceBasis: supplier.priceBasis || "",
+      packingInstructions: supplier.packingInstructions || "",
+      inspectionTerms: supplier.inspectionTerms || "",
+      paymentTerms: supplier.paymentTerms || "",
+      paymentTermsDays: supplier.paymentTermsDays || 30,
+      status: supplier.status || "Approved",
+    });
+    setEditingId(supplier._id);
+    setIsEditing(true);
+    setShowForm(true);
+  };
+
+  const handleDelete = async (id, name) => {
+    if (
+      !window.confirm(
+        `Are you sure you want to delete ${name}? This will also remove all mapped items and rates.`
+      )
+    )
+      return;
+
+    try {
+      const res = await fetch(`/api/procurement/suppliers/${id}`, {
+        method: "DELETE",
+      });
+      const data = await res.json();
+      if (data.success) {
+        setSaveMessage({ type: "success", text: "Supplier removed" });
+        fetchSuppliers();
+      } else {
+        alert(data.error || "Delete failed");
+      }
+    } catch (error) {
+      console.error("Delete error:", error);
+    }
+  };
+
+  // Search Items Logic
   useEffect(() => {
     const timer = setTimeout(() => {
-      if (rateForm.searchQuery && rateForm.searchQuery.length > 1) {
+      // Trigger search if query exists OR if a category is selected (to show items in that category)
+      if (rateForm.searchQuery.length > 1 || rateForm.category) {
         searchItems();
+      } else if (!rateForm.searchQuery && !rateForm.category) {
+        setItemsList([]);
       }
     }, 300);
     return () => clearTimeout(timer);
-  }, [rateForm.searchQuery]);
+  }, [rateForm.searchQuery, rateForm.category]);
 
   const searchItems = async () => {
     try {
       setIsLoadingItems(true);
-      const res = await fetch(
-        `/api/production/items?search=${rateForm.searchQuery}`,
-      );
-      const data = await res.json();
-      if (data.success) {
-        setItemsList(data.data);
+      const query = encodeURIComponent(rateForm.searchQuery || "");
+
+      // Search from both ComponentConfig and SpareConfig
+      const [compRes, spareRes] = await Promise.all([
+        fetch(`/api/production/config/components?search=${query}`),
+        fetch(`/api/production/config/spares?search=${query}`)
+      ]);
+
+      const compData = await compRes.json();
+      const spareData = await spareRes.json();
+
+      let combined = [];
+      if (compData.success) {
+        combined = [...combined, ...compData.data.map(c => ({ ...c, configModel: "ComponentConfig" }))];
       }
+      if (spareData.success) {
+        combined = [...combined, ...spareData.data.map(s => ({ ...s, configModel: "SpareConfig" }))];
+      }
+
+      // Filter by category if selected
+      if (rateForm.category) {
+        combined = combined.filter(c => c.category?.toLowerCase() === rateForm.category.toLowerCase());
+      }
+
+      setItemsList(combined);
     } catch (error) {
       console.error("Item search failed:", error);
     } finally {
@@ -161,7 +276,8 @@ function SupplierConfig({ pageName = "Procurement" }) {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
-            itemId: rateForm.itemId,
+            configId: rateForm.configId,
+            configModel: rateForm.configModel,
             agreedRate: parseFloat(rateForm.agreedRate),
             supplierItemName: rateForm.supplierItemName,
             hsnCode: rateForm.hsnCode,
@@ -183,7 +299,8 @@ function SupplierConfig({ pageName = "Procurement" }) {
           ),
         );
         setRateForm({
-          itemId: "",
+          configId: "",
+          configModel: "",
           itemName: "",
           itemCode: "",
           searchQuery: "",
@@ -207,7 +324,7 @@ function SupplierConfig({ pageName = "Procurement" }) {
 
     try {
       const res = await fetch(
-        `/api/procurement/suppliers/${selectedSupplier._id}/rates?itemId=${itemId}`,
+        `/api/procurement/suppliers/${selectedSupplier._id}/rates?configId=${configId}`,
         {
           method: "DELETE",
         },
@@ -243,7 +360,27 @@ function SupplierConfig({ pageName = "Procurement" }) {
         </div>
         {!isRateModalOpen && (
           <button
-            onClick={() => setShowForm(!showForm)}
+            onClick={() => {
+              setIsEditing(false);
+              setEditingId(null);
+              setNewSupplier({
+                name: "",
+                supplierCode: "",
+                contactEmail: "",
+                gstNumber: "",
+                address: "",
+                contactPerson: "",
+                phone: "",
+                jurisdiction: "",
+                priceBasis: "",
+                packingInstructions: "",
+                inspectionTerms: "",
+                paymentTerms: "",
+                paymentTermsDays: 30,
+                status: "Approved",
+              });
+              setShowForm(!showForm);
+            }}
             className="flex items-center gap-2 rounded-xl bg-indigo-600 px-5 py-2.5 text-sm font-bold text-white hover:bg-indigo-500 transition-all shadow-sm"
           >
             <Plus className="w-4 h-4" />
@@ -254,11 +391,10 @@ function SupplierConfig({ pageName = "Procurement" }) {
 
       {saveMessage.text && (
         <div
-          className={`p-4 rounded-xl text-sm font-semibold flex items-center gap-2 ${
-            saveMessage.type === "success"
-              ? "bg-emerald-50 text-emerald-700 border border-emerald-100"
-              : "bg-rose-50 text-rose-700 border border-rose-100"
-          }`}
+          className={`p-4 rounded-xl text-sm font-semibold flex items-center gap-2 ${saveMessage.type === "success"
+            ? "bg-emerald-50 text-emerald-700 border border-emerald-100"
+            : "bg-rose-50 text-rose-700 border border-rose-100"
+            }`}
         >
           {saveMessage.type === "success" ? (
             <Check className="w-4 h-4" />
@@ -275,116 +411,299 @@ function SupplierConfig({ pageName = "Procurement" }) {
         </div>
       )}
 
-      {/* New Supplier Form */}
+      {/* Supplier Registration Modal */}
       {showForm && (
-        <div className="bg-white border border-slate-200 rounded-2xl shadow-sm overflow-hidden animate-in fade-in slide-in-from-top-4 duration-300">
-          <div className="px-6 py-4 bg-slate-50 border-b border-slate-200">
-            <h3 className="text-sm font-bold text-slate-700 uppercase tracking-wider">
-              Register New Supplier
-            </h3>
-          </div>
-          <div className="p-6">
-            <form
-              onSubmit={handleSaveSupplier}
-              className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"
+        <div className="fixed inset-0 z-50 overflow-y-auto">
+          <div className="flex items-center justify-center min-h-screen p-4 text-center sm:block sm:p-0">
+            <div
+              className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm transition-opacity"
+              onClick={() => setShowForm(false)}
+            ></div>
+            <span
+              className="hidden sm:inline-block sm:align-middle sm:h-screen"
+              aria-hidden="true"
             >
-              <div className="space-y-1.5">
-                <label className="text-xs font-bold text-slate-500 uppercase px-1">
-                  Supplier Name
-                </label>
-                <input
-                  type="text"
-                  required
-                  value={newSupplier.name}
-                  onChange={(e) =>
-                    setNewSupplier({ ...newSupplier, name: e.target.value })
-                  }
-                  placeholder="Legal Entity Name"
-                  className="block w-full rounded-xl border-slate-200 py-2.5 px-4 text-sm shadow-sm focus:ring-2 focus:ring-indigo-600 focus:border-indigo-600 transition-all outline-none border"
-                />
+              &#8203;
+            </span>
+            <div className="relative z-10 inline-block align-bottom bg-white rounded-2xl text-left overflow-hidden shadow-2xl transform transition-all sm:my-8 sm:align-middle sm:max-w-2xl sm:w-full">
+              <div className="bg-white">
+                <div className="px-6 py-4 bg-slate-50 border-b border-slate-200 flex justify-between items-center">
+                  <h3 className="text-sm font-bold text-slate-700 uppercase tracking-wider">
+                    {isEditing ? "Edit Supplier Profile" : "Register New Supplier"}
+                  </h3>
+                  <button
+                    onClick={() => setShowForm(false)}
+                    className="text-slate-400 hover:text-slate-600 transition-colors"
+                  >
+                    <X className="w-5 h-5" />
+                  </button>
+                </div>
+                <div className="p-6 overflow-y-auto max-h-[70vh]">
+                  <form
+                    onSubmit={handleSaveSupplier}
+                    className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-4"
+                  >
+                    {/* Basic Information Section */}
+                    <div className="md:col-span-2">
+                      <h4 className="text-[10px] font-black text-indigo-500 uppercase tracking-widest mb-3 border-b border-slate-100 pb-1">Basic Identity</h4>
+                    </div>
+                    <div className="space-y-1.5 md:col-span-2">
+                      <label className="text-xs font-bold text-slate-500 uppercase px-1">
+                        Supplier Name
+                      </label>
+                      <input
+                        type="text"
+                        required
+                        value={newSupplier.name}
+                        onChange={(e) =>
+                          setNewSupplier({ ...newSupplier, name: e.target.value })
+                        }
+                        placeholder="Legal Entity Name"
+                        className="block w-full rounded-xl border-slate-200 py-2.5 px-4 text-sm shadow-sm focus:ring-2 focus:ring-indigo-600 focus:border-indigo-600 transition-all outline-none border"
+                      />
+                    </div>
+                    <div className="md:col-span-1 space-y-1.5">
+                      <label className="text-xs font-bold text-slate-500 uppercase px-1">
+                        Supplier Code
+                      </label>
+                      <input
+                        type="text"
+                        value={newSupplier.supplierCode}
+                        onChange={(e) =>
+                          setNewSupplier({
+                            ...newSupplier,
+                            supplierCode: e.target.value.toUpperCase(),
+                          })
+                        }
+                        placeholder="e.g. VEND-001"
+                        className="block w-full rounded-xl border-slate-200 py-2.5 px-4 text-sm shadow-sm focus:ring-2 focus:ring-indigo-600 focus:border-indigo-600 transition-all outline-none border font-mono uppercase"
+                        required
+                      />
+                    </div>
+
+                    <div className="md:col-span-1 space-y-1.5">
+                      <label className="text-xs font-bold text-slate-500 uppercase px-1">
+                        GST / Tax ID
+                      </label>
+                      <input
+                        type="text"
+                        value={newSupplier.gstNumber}
+                        onChange={(e) =>
+                          setNewSupplier({
+                            ...newSupplier,
+                            gstNumber: e.target.value,
+                          })
+                        }
+                        placeholder="GSTIN Number"
+                        className="block w-full rounded-xl border-slate-200 py-2.5 px-4 text-sm shadow-sm focus:ring-2 focus:ring-indigo-600 focus:border-indigo-600 transition-all outline-none border"
+                      />
+                    </div>
+
+                    {/* Contact Information Section */}
+                    <div className="md:col-span-2 pt-2">
+                      <h4 className="text-[10px] font-black text-indigo-500 uppercase tracking-widest mb-3 border-b border-slate-100 pb-1">Contact Details</h4>
+                    </div>
+                    <div className="space-y-1.5">
+                      <label className="text-xs font-bold text-slate-500 uppercase px-1">
+                        Contact Person
+                      </label>
+                      <input
+                        type="text"
+                        value={newSupplier.contactPerson}
+                        onChange={(e) =>
+                          setNewSupplier({ ...newSupplier, contactPerson: e.target.value })
+                        }
+                        placeholder="Name of Key Contact"
+                        className="block w-full rounded-xl border-slate-200 py-2.5 px-4 text-sm shadow-sm focus:ring-2 focus:ring-indigo-600 focus:border-indigo-600 transition-all outline-none border"
+                      />
+                    </div>
+                    <div className="space-y-1.5">
+                      <label className="text-xs font-bold text-slate-500 uppercase px-1">
+                        Contact Email
+                      </label>
+                      <input
+                        type="email"
+                        required
+                        value={newSupplier.contactEmail}
+                        onChange={(e) =>
+                          setNewSupplier({
+                            ...newSupplier,
+                            contactEmail: e.target.value,
+                          })
+                        }
+                        placeholder="sales@vendor.com"
+                        className="block w-full rounded-xl border-slate-200 py-2.5 px-4 text-sm shadow-sm focus:ring-2 focus:ring-indigo-600 focus:border-indigo-600 transition-all outline-none border"
+                      />
+                    </div>
+                    <div className="space-y-1.5">
+                      <label className="text-xs font-bold text-slate-500 uppercase px-1">
+                        Phone Number
+                      </label>
+                      <input
+                        type="text"
+                        value={newSupplier.phone}
+                        onChange={(e) =>
+                          setNewSupplier({ ...newSupplier, phone: e.target.value })
+                        }
+                        placeholder="+91-XXXXXXXXXX"
+                        className="block w-full rounded-xl border-slate-200 py-2.5 px-4 text-sm shadow-sm focus:ring-2 focus:ring-indigo-600 focus:border-indigo-600 transition-all outline-none border"
+                      />
+                    </div>
+                    <div className="space-y-1.5">
+                      <label className="text-xs font-bold text-slate-500 uppercase px-1">
+                        Jurisdiction
+                      </label>
+                      <input
+                        type="text"
+                        value={newSupplier.jurisdiction}
+                        onChange={(e) =>
+                          setNewSupplier({ ...newSupplier, jurisdiction: e.target.value })
+                        }
+                        placeholder="e.g. Bangalore"
+                        className="block w-full rounded-xl border-slate-200 py-2.5 px-4 text-sm shadow-sm focus:ring-2 focus:ring-indigo-600 focus:border-indigo-600 transition-all outline-none border"
+                      />
+                    </div>
+                    <div className="space-y-1.5 md:col-span-2">
+                      <label className="text-xs font-bold text-slate-500 uppercase px-1">
+                        Full Registered Address
+                      </label>
+                      <textarea
+                        rows="2"
+                        value={newSupplier.address}
+                        onChange={(e) =>
+                          setNewSupplier({ ...newSupplier, address: e.target.value })
+                        }
+                        placeholder="Office No, Street, City, ZIP..."
+                        className="block w-full rounded-xl border-slate-200 py-2.5 px-4 text-sm shadow-sm focus:ring-2 focus:ring-indigo-600 focus:border-indigo-600 transition-all outline-none border resize-none"
+                      />
+                    </div>
+
+                    {/* Procurement Terms Section */}
+                    <div className="md:col-span-2 pt-2">
+                      <h4 className="text-[10px] font-black text-indigo-500 uppercase tracking-widest mb-3 border-b border-slate-100 pb-1">Commercial & Logistics</h4>
+                    </div>
+                    <div className="space-y-1.5">
+                      <label className="text-xs font-bold text-slate-500 uppercase px-1">
+                        Price Basis
+                      </label>
+                      <input
+                        type="text"
+                        value={newSupplier.priceBasis}
+                        onChange={(e) =>
+                          setNewSupplier({ ...newSupplier, priceBasis: e.target.value })
+                        }
+                        placeholder="e.g. FOR Destination / Ex-Works"
+                        className="block w-full rounded-xl border-slate-200 py-2.5 px-4 text-sm shadow-sm focus:ring-2 focus:ring-indigo-600 focus:border-indigo-600 transition-all outline-none border"
+                      />
+                    </div>
+                    <div className="space-y-1.5">
+                      <label className="text-xs font-bold text-slate-500 uppercase px-1">
+                        Payment Terms (Days)
+                      </label>
+                      <input
+                        type="number"
+                        value={newSupplier.paymentTermsDays}
+                        onChange={(e) =>
+                          setNewSupplier({
+                            ...newSupplier,
+                            paymentTermsDays: parseInt(e.target.value),
+                          })
+                        }
+                        className="block w-full rounded-xl border-slate-200 py-2.5 px-4 text-sm shadow-sm focus:ring-2 focus:ring-indigo-600 focus:border-indigo-600 transition-all outline-none border"
+                      />
+                    </div>
+                    <div className="space-y-1.5 md:col-span-2">
+                      <label className="text-xs font-bold text-slate-500 uppercase px-1">
+                        Packing Instructions
+                      </label>
+                      <textarea
+                        rows="2"
+                        value={newSupplier.packingInstructions}
+                        onChange={(e) =>
+                          setNewSupplier({ ...newSupplier, packingInstructions: e.target.value })
+                        }
+                        placeholder="e.g. No plastic / Use corrugated boxes"
+                        className="block w-full rounded-xl border-slate-200 py-2.5 px-4 text-sm shadow-sm focus:ring-2 focus:ring-indigo-600 focus:border-indigo-600 transition-all outline-none border resize-none"
+                      />
+                    </div>
+                    <div className="space-y-1.5 md:col-span-2">
+                      <label className="text-xs font-bold text-slate-500 uppercase px-1">
+                        Inspection Terms
+                      </label>
+                      <input
+                        type="text"
+                        value={newSupplier.inspectionTerms}
+                        onChange={(e) =>
+                          setNewSupplier({ ...newSupplier, inspectionTerms: e.target.value })
+                        }
+                        placeholder="e.g. At Our Works / Third-party"
+                        className="block w-full rounded-xl border-slate-200 py-2.5 px-4 text-sm shadow-sm focus:ring-2 focus:ring-indigo-600 focus:border-indigo-600 transition-all outline-none border"
+                      />
+                    </div>
+
+                    <div className="space-y-1.5 md:col-span-2">
+                      <label className="text-xs font-bold text-slate-500 uppercase px-1">
+                        Payment Terms (Descriptive)
+                      </label>
+                      <input
+                        type="text"
+                        value={newSupplier.paymentTerms}
+                        onChange={(e) =>
+                          setNewSupplier({ ...newSupplier, paymentTerms: e.target.value })
+                        }
+                        placeholder="e.g. 60 DAYS FROM THE DATE OF DELIVERY"
+                        className="block w-full rounded-xl border-slate-200 py-2.5 px-4 text-sm shadow-sm focus:ring-2 focus:ring-indigo-600 focus:border-indigo-600 transition-all outline-none border"
+                      />
+                    </div>
+
+
+                    <div className="md:col-span-2 space-y-1.5 pt-2">
+                      <label className="text-xs font-bold text-slate-500 uppercase px-1">
+                        Vendor Status
+                      </label>
+                      <div className="flex items-center gap-4 bg-slate-50 p-3 rounded-xl border border-slate-200">
+                        <label className="flex items-center gap-2 cursor-pointer group">
+                          <input
+                            type="radio"
+                            name="status"
+                            checked={newSupplier.status === "Approved"}
+                            onChange={() => setNewSupplier({ ...newSupplier, status: "Approved" })}
+                            className="w-4 h-4 text-emerald-600 focus:ring-emerald-500 border-slate-300"
+                          />
+                          <span className={`text-sm font-bold ${newSupplier.status === "Approved" ? "text-emerald-700" : "text-slate-500 group-hover:text-slate-700"}`}>Approved</span>
+                        </label>
+                        <label className="flex items-center gap-2 cursor-pointer group">
+                          <input
+                            type="radio"
+                            name="status"
+                            checked={newSupplier.status === "Blocked"}
+                            onChange={() => setNewSupplier({ ...newSupplier, status: "Blocked" })}
+                            className="w-4 h-4 text-rose-600 focus:ring-rose-500 border-slate-300"
+                          />
+                          <span className={`text-sm font-bold ${newSupplier.status === "Blocked" ? "text-rose-700" : "text-slate-500 group-hover:text-slate-700"}`}>Blocked</span>
+                        </label>
+                      </div>
+                    </div>
+
+                    <div className="md:col-span-2 flex items-center gap-3 pt-6 border-t border-slate-100">
+                      <button
+                        type="button"
+                        onClick={() => setShowForm(false)}
+                        className="flex-1 px-4 py-3 text-sm font-semibold text-slate-600 hover:bg-slate-50 rounded-xl transition-colors border border-slate-200"
+                      >
+                        Cancel
+                      </button>
+                      <button
+                        type="submit"
+                        className="flex-1 px-5 py-3 text-sm font-bold text-white bg-indigo-600 hover:bg-indigo-700 rounded-xl shadow-lg shadow-indigo-200 transition-all active:scale-95"
+                      >
+                        {isEditing ? "Update Profile" : "Complete Registration"}
+                      </button>
+                    </div>
+                  </form>
+                </div>
               </div>
-              <div className="space-y-1.5">
-                <label className="text-xs font-bold text-slate-500 uppercase px-1">
-                  Global/Industry Category
-                </label>
-                <input
-                  type="text"
-                  required
-                  value={newSupplier.category}
-                  onChange={(e) =>
-                    setNewSupplier({ ...newSupplier, category: e.target.value })
-                  }
-                  placeholder="e.g. Electronic Components"
-                  className="block w-full rounded-xl border-slate-200 py-2.5 px-4 text-sm shadow-sm focus:ring-2 focus:ring-indigo-600 focus:border-indigo-600 transition-all outline-none border"
-                />
-              </div>
-              <div className="space-y-1.5">
-                <label className="text-xs font-bold text-slate-500 uppercase px-1">
-                  Contact Email
-                </label>
-                <input
-                  type="email"
-                  required
-                  value={newSupplier.contactEmail}
-                  onChange={(e) =>
-                    setNewSupplier({
-                      ...newSupplier,
-                      contactEmail: e.target.value,
-                    })
-                  }
-                  placeholder="sales@vendor.com"
-                  className="block w-full rounded-xl border-slate-200 py-2.5 px-4 text-sm shadow-sm focus:ring-2 focus:ring-indigo-600 focus:border-indigo-600 transition-all outline-none border"
-                />
-              </div>
-              <div className="space-y-1.5">
-                <label className="text-xs font-bold text-slate-500 uppercase px-1">
-                  GST / Tax ID
-                </label>
-                <input
-                  type="text"
-                  value={newSupplier.gstNumber}
-                  onChange={(e) =>
-                    setNewSupplier({
-                      ...newSupplier,
-                      gstNumber: e.target.value,
-                    })
-                  }
-                  placeholder="GSTIN Number"
-                  className="block w-full rounded-xl border-slate-200 py-2.5 px-4 text-sm shadow-sm focus:ring-2 focus:ring-indigo-600 focus:border-indigo-600 transition-all outline-none border"
-                />
-              </div>
-              <div className="space-y-1.5">
-                <label className="text-xs font-bold text-slate-500 uppercase px-1">
-                  Payment Terms (Days)
-                </label>
-                <input
-                  type="number"
-                  value={newSupplier.paymentTermsDays}
-                  onChange={(e) =>
-                    setNewSupplier({
-                      ...newSupplier,
-                      paymentTermsDays: parseInt(e.target.value),
-                    })
-                  }
-                  className="block w-full rounded-xl border-slate-200 py-2.5 px-4 text-sm shadow-sm focus:ring-2 focus:ring-indigo-600 focus:border-indigo-600 transition-all outline-none border"
-                />
-              </div>
-              <div className="flex items-end gap-3 pt-1 border-t md:border-t-0 md:col-span-1 lg:col-span-1">
-                <button
-                  type="button"
-                  onClick={() => setShowForm(false)}
-                  className="flex-1 px-4 py-2.5 text-sm font-semibold text-slate-600 hover:bg-slate-100 rounded-xl transition-colors"
-                >
-                  Cancel
-                </button>
-                <button
-                  type="submit"
-                  className="flex-1 px-5 py-2.5 text-sm font-bold text-white bg-indigo-600 hover:bg-indigo-700 rounded-xl shadow-md transition-all active:scale-95"
-                >
-                  Save Partner
-                </button>
-              </div>
-            </form>
+            </div>
           </div>
         </div>
       )}
@@ -396,11 +715,8 @@ function SupplierConfig({ pageName = "Procurement" }) {
             <table className="w-full text-sm text-left">
               <thead className="bg-slate-50 border-b border-slate-200">
                 <tr>
-                  <th className="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-wider">
-                    Supplier Details
-                  </th>
-                  <th className="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-wider">
-                    Category
+                  <th className="px-6 py-4 text-left text-xs font-bold text-slate-500 uppercase tracking-wider">
+                    Supplier / Code
                   </th>
                   <th className="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-wider">
                     Performance
@@ -420,15 +736,17 @@ function SupplierConfig({ pageName = "Procurement" }) {
                     className="hover:bg-slate-50/80 transition-colors group"
                   >
                     <td className="px-6 py-4">
-                      <div className="font-bold text-slate-900">{s.name}</div>
+                      <div className="flex flex-col">
+                        <span className="text-sm font-bold text-slate-900 capitalize">
+                          {s.name}
+                        </span>
+                        <span className="text-[10px] font-medium text-slate-400 font-mono uppercase">
+                          {s.supplierCode || "NO-CODE"}
+                        </span>
+                      </div>
                       <div className="text-xs text-slate-500 flex items-center gap-1.5 mt-1">
                         <Mail className="w-3 h-3" /> {s.contactEmail}
                       </div>
-                    </td>
-                    <td className="px-6 py-4">
-                      <span className="inline-flex items-center px-2 py-0.5 rounded-md text-xs font-medium bg-slate-100 text-slate-700">
-                        {s.category}
-                      </span>
                     </td>
                     <td className="px-6 py-4">
                       <div className="text-amber-500 font-bold tracking-tight text-sm">
@@ -446,17 +764,43 @@ function SupplierConfig({ pageName = "Procurement" }) {
                         </span>
                       </div>
                     </td>
-                    <td className="px-6 py-4 text-right">
-                      <button
-                        onClick={() => {
-                          setSelectedSupplier(s);
-                          setIsRateModalOpen(true);
-                        }}
-                        className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold text-indigo-700 bg-indigo-50 hover:bg-indigo-100 transition-colors border border-indigo-200"
-                      >
-                        <Database className="w-3.5 h-3.5" />
-                        Manage Rates
-                      </button>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <span className={`px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider border ${s.status === "Blocked"
+                        ? "bg-rose-50 text-rose-700 border-rose-100"
+                        : "bg-emerald-50 text-emerald-700 border-emerald-100"
+                        }`}>
+                        {s.status || "Approved"}
+                      </span>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                      <div className="flex items-center justify-end gap-2">
+                        <button
+                          onClick={() => handleEdit(s)}
+                          className="p-2 text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 rounded-lg transition-all"
+                          title="Edit Supplier"
+                        >
+                          <Edit className="w-4 h-4" />
+                        </button>
+                        <button
+                          onClick={() =>
+                            handleDelete(s._id, s.name)
+                          }
+                          className="p-2 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition-all"
+                          title="Delete Supplier"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </button>
+                        <button
+                          onClick={() => {
+                            setSelectedSupplier(s);
+                            setIsRateModalOpen(true);
+                          }}
+                          className="px-3 py-1.5 rounded-lg bg-slate-100 text-slate-700 hover:bg-slate-200 transition-all flex items-center gap-1.5"
+                        >
+                          <Database className="w-3.5 h-3.5" />
+                          Manage Rates
+                        </button>
+                      </div>
                     </td>
                   </tr>
                 ))}
@@ -593,7 +937,6 @@ function SupplierConfig({ pageName = "Procurement" }) {
                       <tr>
                         <th className="px-6 py-3">Internal Item</th>
                         <th className="px-6 py-3">Supplier Alias</th>
-                        <th className="px-6 py-3">Lead Time</th>
                         <th className="px-6 py-3">Contract Rate</th>
                         <th className="px-6 py-3 text-right text-slate-700 bg-indigo-50/30">
                           Action
@@ -608,10 +951,10 @@ function SupplierConfig({ pageName = "Procurement" }) {
                         >
                           <td className="px-6 py-4">
                             <div className="font-bold text-slate-900">
-                              {product.item?.itemCode}
+                              {product.configId?.itemCode}
                             </div>
                             <div className="text-[11px] text-slate-500 font-medium">
-                              {product.item?.itemName}
+                              {product.configId?.itemName}
                             </div>
                           </td>
                           <td className="px-6 py-4">
@@ -623,11 +966,6 @@ function SupplierConfig({ pageName = "Procurement" }) {
                                 HSN: {product.hsnCode}
                               </div>
                             )}
-                          </td>
-                          <td className="px-6 py-4">
-                            <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-50 text-amber-700 border border-amber-100">
-                              {product.leadTime} Days
-                            </span>
                           </td>
                           <td className="px-6 py-4">
                             <div className="text-sm font-bold text-slate-900">
@@ -646,10 +984,10 @@ function SupplierConfig({ pageName = "Procurement" }) {
                                 onClick={() => {
                                   const history =
                                     selectedSupplier.priceHistory?.filter(
-                                      (h) => h.item === product.item?._id,
+                                      (h) => h.configId === (product.configId?._id || product.configId),
                                     );
                                   setTrendItem({
-                                    item: product.item,
+                                    item: product.configId,
                                     history: history || [],
                                   });
                                   setIsTrendModalOpen(true);
@@ -662,10 +1000,11 @@ function SupplierConfig({ pageName = "Procurement" }) {
                               <button
                                 onClick={() => {
                                   setRateForm({
-                                    itemId: product.item?._id,
-                                    itemName: product.item?.itemName,
-                                    itemCode: product.item?.itemCode,
-                                    searchQuery: `${product.item?.itemCode} - ${product.item?.itemName}`,
+                                    configId: product.configId?._id || product.configId,
+                                    configModel: product.configModel,
+                                    itemName: product.configId?.itemName,
+                                    itemCode: product.configId?.itemCode,
+                                    searchQuery: `${product.configId?.itemCode} - ${product.configId?.itemName}`,
                                     supplierItemName:
                                       product.supplierItemName || "",
                                     hsnCode: product.hsnCode || "",
@@ -685,7 +1024,7 @@ function SupplierConfig({ pageName = "Procurement" }) {
                               </button>
                               <button
                                 onClick={() =>
-                                  handleDeleteRate(product.item?._id)
+                                  handleDeleteRate(product.configId?._id || product.configId)
                                 }
                                 className="p-2 text-rose-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition-colors"
                                 title="Remove Mapping"
@@ -745,8 +1084,24 @@ function SupplierConfig({ pageName = "Procurement" }) {
                 </div>
 
                 <div className="p-6 space-y-5">
+                  <div>
+                    <label className="text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-1.5 block px-1">
+                      Component Category
+                    </label>
+                    <select
+                      value={rateForm.category}
+                      onChange={(e) => setRateForm({ ...rateForm, category: e.target.value, itemId: "", searchQuery: "", showDropdown: true })}
+                      className="block w-full rounded-xl border border-slate-200 py-2.5 px-4 text-sm outline-none focus:ring-2 focus:ring-indigo-600 transition-all bg-white"
+                    >
+                      <option value="">All Categories</option>
+                      {availableCategories.map(cat => (
+                        <option key={cat} value={cat.toLowerCase()}>{cat}</option>
+                      ))}
+                    </select>
+                  </div>
+
                   <div className="relative">
-                    <label className="text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-1.5 block">
+                    <label className="text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-1.5 block px-1">
                       Internal Component Search
                     </label>
                     <div className="relative">
@@ -765,11 +1120,10 @@ function SupplierConfig({ pageName = "Procurement" }) {
                         onFocus={() =>
                           setRateForm({ ...rateForm, showDropdown: true })
                         }
-                        className={`block w-full rounded-xl border py-2.5 pl-10 pr-4 text-sm outline-none transition-all ${
-                          rateForm.itemId
-                            ? "bg-emerald-50 border-emerald-200 text-emerald-900"
-                            : "bg-white border-slate-200"
-                        }`}
+                        className={`block w-full rounded-xl border py-2.5 pl-10 pr-4 text-sm outline-none transition-all ${rateForm.itemId
+                          ? "bg-emerald-50 border-emerald-200 text-emerald-900"
+                          : "bg-white border-slate-200"
+                          }`}
                       />
                       {rateForm.showDropdown && (
                         <div
@@ -789,7 +1143,8 @@ function SupplierConfig({ pageName = "Procurement" }) {
                                 onClick={() =>
                                   setRateForm({
                                     ...rateForm,
-                                    itemId: item._id,
+                                    configId: item._id,
+                                    configModel: item.configModel,
                                     itemName: item.itemName,
                                     itemCode: item.itemCode,
                                     hsnCode: item.hsnCode || "",
@@ -855,7 +1210,7 @@ function SupplierConfig({ pageName = "Procurement" }) {
                     </div>
                   </div>
 
-                  <div className="grid grid-cols-2 gap-4">
+                  <div className="grid grid-cols-1 gap-4">
                     <div className="space-y-1.5">
                       <label className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">
                         HSN / SAC Code
@@ -866,20 +1221,6 @@ function SupplierConfig({ pageName = "Procurement" }) {
                         value={rateForm.hsnCode}
                         onChange={(e) =>
                           setRateForm({ ...rateForm, hsnCode: e.target.value })
-                        }
-                        className="block w-full rounded-xl border border-slate-200 py-2.5 px-4 text-sm outline-none"
-                      />
-                    </div>
-                    <div className="space-y-1.5">
-                      <label className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">
-                        Lead Time (Days)
-                      </label>
-                      <input
-                        type="number"
-                        placeholder="7"
-                        value={rateForm.leadTime}
-                        onChange={(e) =>
-                          setRateForm({ ...rateForm, leadTime: e.target.value })
                         }
                         className="block w-full rounded-xl border border-slate-200 py-2.5 px-4 text-sm outline-none"
                       />

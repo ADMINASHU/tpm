@@ -28,6 +28,10 @@ const SpareParts = dynamic(
   () => import("@/components/production/SpareParts"),
   { loading: () => <TabLoader /> }
 );
+const AssemblyLog = dynamic(
+  () => import("@/components/production/AssemblyLog"),
+  { loading: () => <TabLoader /> }
+);
 
 function TabLoader() {
   return (
@@ -67,20 +71,24 @@ const PAGE_HEADERS = {
     title: "Spare Parts Config",
     subtitle: "Configure field-replaceable units and service kits.",
   },
+  assembly: {
+    title: "Assembly Production",
+    subtitle: "Execute new builds and track batch history in a unified log book.",
+  },
 };
 
-const TABS = ["build", "bom", "genealogy", "products", "components", "spares"];
+const TABS = ["assembly", "bom", "genealogy", "products", "components", "spares"];
 
 function ProductionContent() {
   const searchParams = useSearchParams();
-  const tabFromUrl = searchParams.get("tab") || "build";
+  const tabFromUrl = searchParams.get("tab") || "assembly";
   const [activeTab, setActiveTab] = useState(tabFromUrl);
 
   useEffect(() => {
     if (TABS.includes(tabFromUrl)) setActiveTab(tabFromUrl);
   }, [tabFromUrl]);
 
-  const { title, subtitle } = PAGE_HEADERS[activeTab] || PAGE_HEADERS.build;
+  const { title, subtitle } = PAGE_HEADERS[activeTab] || PAGE_HEADERS.assembly;
 
   return (
     <div className="flex-1 p-4 md:py-6 md:px-8">
@@ -103,7 +111,7 @@ function ProductionContent() {
         </div>
 
         <div className="bg-white rounded-xl shadow-sm border border-slate-100 p-4 md:p-6">
-          {activeTab === "build" && <NewBuild pageName="Production" />}
+          {activeTab === "assembly" && <AssemblyLog pageName="Production" />}
           {activeTab === "bom" && <BOMConfig pageName="Production" />}
           {activeTab === "genealogy" && <GenealogyTrace pageName="Production" />}
           {activeTab === "products" && <ProductConfig pageName="Production" />}

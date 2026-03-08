@@ -79,12 +79,12 @@ const navItems = [
   {
     name: "Production",
     href: "/production",
-    icon: Wrench,
+    icon: Factory,
     children: [
       {
-        name: "New Assembly Build",
-        href: "/production?tab=build",
-        icon: Layers,
+        name: "Assembly Production",
+        href: "/production?tab=assembly",
+        icon: ClipboardList,
       },
       {
         name: "BOM Configuration",

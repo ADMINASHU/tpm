@@ -16,6 +16,8 @@ import Breadcrumb from "@/components/Breadcrumb";
 
 function BOMConfig({ pageName = "Production" }) {
   const [isInitialized, setIsInitialized] = useState(false);
+  const [targetConfigId, setTargetConfigId] = useState("");
+  const [targetConfigModel, setTargetConfigModel] = useState("ProductConfig");
   const [targetProduct, setTargetProduct] = useState("");
   const [targetType, setTargetType] = useState("Finished_Product");
   const [documentNo, setDocumentNo] = useState("");
@@ -49,7 +51,8 @@ function BOMConfig({ pageName = "Production" }) {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingMaterialIndex, setEditingMaterialIndex] = useState(null);
   const [currentMaterial, setCurrentMaterial] = useState({
-    itemId: "",
+    configId: "",
+    configModel: "ComponentConfig",
     itemName: "",
     itemCode: "",
     trackingStrategy: "Bulk",
@@ -66,19 +69,29 @@ function BOMConfig({ pageName = "Production" }) {
     const fetchItemsAndProducts = async () => {
       setIsLoadingItems(true);
       try {
-        const [itemsRes, productsRes] = await Promise.all([
-          fetch("/api/production/items"),
-          fetch("/api/production/products"),
+        const [itemsRes, sparesRes, productsRes] = await Promise.all([
+          fetch("/api/production/config/components"),
+          fetch("/api/production/config/spares"),
+          fetch("/api/production/config/products"),
         ]);
 
         const itemsJson = await itemsRes.json();
+        const sparesJson = await sparesRes.json();
         const productsJson = await productsRes.json();
 
-        if (itemsJson.success) {
-          setItemsList(itemsJson.data || []);
+        if (itemsJson.success && sparesJson.success) {
+          const combinedItems = [
+            ...(itemsJson.data || []).map(i => ({ ...i, configModel: "ComponentConfig" })),
+            ...(sparesJson.data || []).map(s => ({ ...s, configModel: "SpareConfig" }))
+          ];
+          setItemsList(combinedItems);
+        } else if (itemsJson.success) {
+          setItemsList((itemsJson.data || []).map(i => ({ ...i, configModel: "ComponentConfig" })));
+        } else if (sparesJson.success) {
+          setItemsList((sparesJson.data || []).map(s => ({ ...s, configModel: "SpareConfig" })));
         }
         if (productsJson.success) {
-          setProductsList(productsJson.data || []);
+          setProductsList((productsJson.data || []).map(p => ({ ...p, configModel: "ProductConfig" })));
         }
       } catch (error) {
         console.error("Error fetching items/products:", error);
@@ -124,7 +137,8 @@ function BOMConfig({ pageName = "Production" }) {
     e?.preventDefault();
     setEditingMaterialIndex(null);
     setCurrentMaterial({
-      itemId: "",
+      configId: "",
+      configModel: "ComponentConfig",
       itemName: "",
       itemCode: "",
       trackingStrategy: "Bulk",
@@ -215,7 +229,8 @@ function BOMConfig({ pageName = "Production" }) {
           itemsList.find((item) => item.itemCode === code) || null;
 
         newMaterials.push({
-          itemId: matchedItem ? matchedItem._id : "",
+          configId: matchedItem ? matchedItem._id : "",
+          configModel: matchedItem ? matchedItem.configModel : "ComponentConfig",
           itemName: matchedItem ? matchedItem.itemName : "",
           itemCode: code,
           trackingStrategy: matchedItem
@@ -260,7 +275,7 @@ function BOMConfig({ pageName = "Production" }) {
       return;
     }
 
-    const invalidMaterials = materials.filter((m) => !m.itemId || m.qty <= 0);
+    const invalidMaterials = materials.filter((m) => !m.configId || m.qty <= 0);
     if (invalidMaterials.length > 0) {
       setSaveMessage({
         type: "error",
@@ -275,9 +290,12 @@ function BOMConfig({ pageName = "Production" }) {
         bomNumber: documentNo.trim(),
         version: String(version).trim(),
         targetProduct: targetProduct.trim(),
+        targetConfigId: targetConfigId,
+        targetConfigModel: targetConfigModel,
         targetType: targetType,
         components: materials.map((m) => ({
-          itemId: m.itemId,
+          configId: m.configId,
+          configModel: m.configModel,
           itemName: m.itemName,
           requiredQuantity: Number(m.qty),
           trackingStrategy: m.trackingStrategy,
@@ -346,15 +364,16 @@ function BOMConfig({ pageName = "Production" }) {
 
     // Convert DB components mapping back to form state
     const mappedMaterials = bom.components.map((comp) => ({
-      itemId: comp.itemId?._id || comp.itemId,
-      itemName: comp.itemId?.itemName || comp.itemName,
-      itemCode: comp.itemId?.itemCode || "",
+      configId: comp.configId?._id || comp.configId,
+      configModel: comp.configModel,
+      itemName: comp.configId?.itemName || comp.itemName,
+      itemCode: comp.configId?.itemCode || "",
       trackingStrategy: comp.trackingStrategy,
       qty: comp.requiredQuantity,
       legend: comp.legend || "",
       make: comp.make || "",
       category: comp.category || "",
-      searchQuery: `${comp.itemId?.itemCode || ""} - ${comp.itemId?.itemName || comp.itemName}`,
+      searchQuery: `${comp.configId?.itemCode || ""} - ${comp.configId?.itemName || comp.itemName}`,
       showDropdown: false,
       showMakeDropdown: false,
     }));
@@ -367,7 +386,7 @@ function BOMConfig({ pageName = "Production" }) {
   const handleDeleteBOM = async (id, bomNumber) => {
     if (
       !window.confirm(
-        `Are you sure you want to permanently delete recipe ${bomNumber}?`,
+        `Are you sure you want to permanently delete BOM ${bomNumber}?`,
       )
     )
       return;
@@ -397,7 +416,8 @@ function BOMConfig({ pageName = "Production" }) {
     if (field === "searchQuery") {
       updated.showDropdown = true;
       // Clear selection if searching again
-      if (updated.itemId) {
+      if (updated.configId) {
+        // Option to clear if needed
       }
     }
     setCurrentMaterial(updated);
@@ -412,7 +432,8 @@ function BOMConfig({ pageName = "Production" }) {
 
   const handleModalSelectItem = (item) => {
     const updated = { ...currentMaterial };
-    updated.itemId = item._id;
+    updated.configId = item._id;
+    updated.configModel = item.configModel;
     updated.itemName = item.itemName;
     updated.itemCode = item.itemCode;
     updated.trackingStrategy = item.trackingType || "Bulk";
@@ -499,7 +520,7 @@ function BOMConfig({ pageName = "Production" }) {
                 </p>
                 <p className="text-xs text-indigo-700/70 max-w-xs">
                   Click &quot;Add Item&quot; to start appending components and
-                  raw materials to this recipe.
+                  raw materials to this BOM.
                 </p>
               </div>
             ) : (
@@ -626,11 +647,10 @@ function BOMConfig({ pageName = "Production" }) {
 
             {saveMessage.text && (
               <div
-                className={`mb-4 p-3 rounded-lg text-sm font-semibold flex items-center gap-2 ${
-                  saveMessage.type === "error"
-                    ? "bg-red-50 text-red-600 border border-red-200"
-                    : "bg-emerald-50 text-emerald-600 border border-emerald-200"
-                }`}
+                className={`mb-4 p-3 rounded-lg text-sm font-semibold flex items-center gap-2 ${saveMessage.type === "error"
+                  ? "bg-red-50 text-red-600 border border-red-200"
+                  : "bg-emerald-50 text-emerald-600 border border-emerald-200"
+                  }`}
               >
                 {saveMessage.type === "error" && (
                   <AlertCircle className="w-4 h-4" />
@@ -763,11 +783,10 @@ function BOMConfig({ pageName = "Production" }) {
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap text-sm">
                           <span
-                            className={`px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full ${
-                              bom.isActive
-                                ? "bg-emerald-100 text-emerald-800"
-                                : "bg-slate-100 text-slate-800"
-                            }`}
+                            className={`px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full ${bom.isActive
+                              ? "bg-emerald-100 text-emerald-800"
+                              : "bg-slate-100 text-slate-800"
+                              }`}
                           >
                             {bom.isActive ? "Active" : "Inactive"}
                           </span>
@@ -787,7 +806,7 @@ function BOMConfig({ pageName = "Production" }) {
                             <button
                               onClick={() => handleEditBOM(bom)}
                               className="text-slate-400 hover:text-indigo-600 transition-colors"
-                              title="Edit Recipe"
+                              title="Edit BOM"
                             >
                               <Edit className="w-4 h-4" />
                             </button>
@@ -796,7 +815,7 @@ function BOMConfig({ pageName = "Production" }) {
                                 handleDeleteBOM(bom._id, bom.bomNumber)
                               }
                               className="text-slate-400 hover:text-red-600 transition-colors"
-                              title="Delete Recipe"
+                              title="Delete BOM"
                             >
                               <Trash2 className="w-4 h-4" />
                             </button>
@@ -811,7 +830,7 @@ function BOMConfig({ pageName = "Production" }) {
                             <div className="bg-white rounded-lg border border-slate-200 overflow-hidden shadow-sm">
                               <div className="bg-indigo-50/50 px-4 py-2 border-b border-slate-200">
                                 <h4 className="text-xs font-bold text-indigo-900 uppercase tracking-wider">
-                                  Recipe Contents
+                                  BOM Contents
                                 </h4>
                               </div>
                               <table className="min-w-full divide-y divide-slate-200">
@@ -862,10 +881,10 @@ function BOMConfig({ pageName = "Production" }) {
                                         {comp.category || "-"}
                                       </td>
                                       <td className="px-4 py-1.5 whitespace-nowrap text-sm font-medium text-slate-900">
-                                        {comp.itemId?.itemCode || "Unknown"}
+                                        {comp.configId?.itemCode || "Unknown"}
                                       </td>
                                       <td className="px-4 py-1.5 text-sm text-slate-500">
-                                        {comp.itemId?.description ||
+                                        {comp.configId?.description ||
                                           comp.itemName}
                                       </td>
                                       <td className="px-4 py-1.5 whitespace-nowrap text-sm text-slate-500">
@@ -920,7 +939,7 @@ function BOMConfig({ pageName = "Production" }) {
               <div>
                 <div className="mt-3 text-center sm:mt-0 sm:ml-4 sm:text-left">
                   <h3 className="text-xl leading-6 font-bold text-slate-900 border-b border-slate-100 pb-4 flex justify-between items-center">
-                    Create New BOM Recipe
+                    Create New BOM
                     <button
                       onClick={handleCloseRecipeModal}
                       className="text-slate-400 hover:text-slate-500 transition-colors outline-none"
@@ -1035,8 +1054,8 @@ function BOMConfig({ pageName = "Production" }) {
                             {(targetType === "Finished_Product"
                               ? productsList
                               : (itemsList || []).filter(
-                                  (i) => i.category === "Spares",
-                                )
+                                (i) => i.category === "Spares_Config",
+                              )
                             )
                               .filter((item) => {
                                 const s = targetProductName.toLowerCase();
@@ -1065,11 +1084,15 @@ function BOMConfig({ pageName = "Production" }) {
                                   key={item._id}
                                   onClick={() => {
                                     if (targetType === "Finished_Product") {
-                                      setTargetProduct(item.productName); // Keep using the name as the identifier for now, as that's how it's saved in BOMs traditionally, or switch to _id depending on backend schema. Using Name for display parity.
+                                      setTargetProduct(item.productName);
                                       setTargetProductName(item.productName);
+                                      setTargetConfigId(item._id);
+                                      setTargetConfigModel("ProductConfig");
                                     } else {
                                       setTargetProduct(item.itemName);
                                       setTargetProductName(item.itemName);
+                                      setTargetConfigId(item._id);
+                                      setTargetConfigModel("SpareConfig");
                                     }
                                     setIsTargetProductDropdownOpen(false);
                                   }}
@@ -1093,8 +1116,8 @@ function BOMConfig({ pageName = "Production" }) {
                             {(targetType === "Finished_Product"
                               ? productsList
                               : (itemsList || []).filter(
-                                  (i) => i.category === "Spares",
-                                )
+                                (i) => i.category === "Spares_Config",
+                              )
                             ).filter((item) => {
                               const s = targetProductName.toLowerCase();
                               if (targetType === "Finished_Product") {
@@ -1112,10 +1135,10 @@ function BOMConfig({ pageName = "Production" }) {
                                 );
                               }
                             }).length === 0 && (
-                              <div className="px-4 py-3 text-rose-500 font-medium bg-rose-50 text-center">
-                                No matching configuration found.
-                              </div>
-                            )}
+                                <div className="px-4 py-3 text-rose-500 font-medium bg-rose-50 text-center">
+                                  No matching configuration found for {targetType.replace("_", " ")}.
+                                </div>
+                              )}
                           </div>
                         )}
                       </div>
@@ -1128,20 +1151,19 @@ function BOMConfig({ pageName = "Production" }) {
                 <button
                   type="button"
                   onClick={() => {
-                    if (targetProduct && documentNo && version) {
+                    if (targetProduct && targetConfigId && documentNo && version) {
                       setIsInitialized(true);
                       setIsRecipeModalOpen(false);
                       setTargetProductName(""); // Reset the search input for next time since we use targetProduct to hold the val
                     }
                   }}
-                  disabled={!targetProduct || !documentNo || !version}
-                  className={`w-full inline-flex justify-center rounded-xl border border-transparent shadow-sm px-5 py-2.5 text-base font-semibold text-white sm:ml-3 sm:w-auto sm:text-sm transition-colors ${
-                    !targetProduct || !documentNo || !version
-                      ? "bg-indigo-300 cursor-not-allowed"
-                      : "bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
-                  }`}
+                  disabled={!targetProduct || !targetConfigId || !documentNo || !version}
+                  className={`w-full inline-flex justify-center rounded-xl border border-transparent shadow-sm px-5 py-2.5 text-base font-semibold text-white sm:ml-3 sm:w-auto sm:text-sm transition-colors ${!targetProduct || !targetConfigId || !documentNo || !version
+                    ? "bg-indigo-300 cursor-not-allowed"
+                    : "bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+                    }`}
                 >
-                  Create Recipe
+                  Create BOM
                 </button>
                 <button
                   type="button"
@@ -1241,10 +1263,10 @@ function BOMConfig({ pageName = "Production" }) {
                           onFocus={() =>
                             handleModalChange("showDropdown", true)
                           }
-                          className={`block w-full rounded-xl border py-3 pl-10 pr-4 text-sm shadow-sm transition-colors outline-none ${currentMaterial.itemId ? "bg-emerald-50 border-emerald-200 text-emerald-900 focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500" : "bg-white border-slate-200 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"}`}
+                          className={`block w-full rounded-xl border py-3 pl-10 pr-4 text-sm shadow-sm transition-colors outline-none ${currentMaterial.configId ? "bg-emerald-50 border-emerald-200 text-emerald-900 focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500" : "bg-white border-slate-200 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"}`}
                           autoComplete="off"
                         />
-                        {currentMaterial.itemId && (
+                        {currentMaterial.configId && (
                           <Check className="absolute right-3 top-3 h-5 w-5 text-emerald-600" />
                         )}
                       </div>
@@ -1277,10 +1299,10 @@ function BOMConfig({ pageName = "Production" }) {
                                     );
                                 const categoryMatch = currentMaterial.category
                                   ? (item.category || "")
-                                      .toLowerCase()
-                                      .includes(
-                                        currentMaterial.category.toLowerCase(),
-                                      )
+                                    .toLowerCase()
+                                    .includes(
+                                      currentMaterial.category.toLowerCase(),
+                                    )
                                   : true;
                                 return searchMatch && categoryMatch;
                               })
@@ -1316,10 +1338,10 @@ function BOMConfig({ pageName = "Production" }) {
                                 );
                             const categoryMatch = currentMaterial.category
                               ? (item.category || "")
-                                  .toLowerCase()
-                                  .includes(
-                                    currentMaterial.category.toLowerCase(),
-                                  )
+                                .toLowerCase()
+                                .includes(
+                                  currentMaterial.category.toLowerCase(),
+                                )
                               : true;
                             return searchMatch && categoryMatch;
                           }).length === 0 &&
@@ -1472,9 +1494,9 @@ function BOMConfig({ pageName = "Production" }) {
                   type="button"
                   onClick={handleSaveMaterialToBOM}
                   disabled={
-                    !currentMaterial.itemId || !currentMaterial.category
+                    !currentMaterial.configId || !currentMaterial.category
                   }
-                  className={`w-full inline-flex justify-center rounded-xl border border-transparent shadow-sm px-5 py-2.5 text-base font-semibold text-white sm:ml-3 sm:w-auto sm:text-sm transition-colors ${!currentMaterial.itemId || !currentMaterial.category ? "bg-indigo-300 cursor-not-allowed" : "bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"}`}
+                  className={`w-full inline-flex justify-center rounded-xl border border-transparent shadow-sm px-5 py-2.5 text-base font-semibold text-white sm:ml-3 sm:w-auto sm:text-sm transition-colors ${!currentMaterial.configId || !currentMaterial.category ? "bg-indigo-300 cursor-not-allowed" : "bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"}`}
                 >
                   {editingMaterialIndex !== null
                     ? "Update Component"

@@ -1,7 +1,7 @@
 ﻿"use client";
 
-import { useState, useEffect, useMemo } from "react";
-import { Plus, Edit, Trash2, Search, Settings2, Columns } from "lucide-react";
+import { useState, useEffect, useMemo, useRef } from "react";
+import { Plus, Edit, Trash2, Search, Settings2, Columns, Download, Upload, X, Check, AlertCircle } from "lucide-react";
 import Breadcrumb from "@/components/Breadcrumb";
 import { getISODateIST } from "@/lib/dateUtils";
 
@@ -16,19 +16,28 @@ function SpareParts({ pageName = "Production" }) {
   const [isSaving, setIsSaving] = useState(false);
   const [saveError, setSaveError] = useState("");
 
+  // CSV Import State
+  const [showCsvModal, setShowCsvModal] = useState(false);
+  const [csvRows, setCsvRows] = useState([]);
+  const [csvError, setCsvError] = useState("");
+  const [isUploading, setIsUploading] = useState(false);
+  const [uploadResult, setUploadResult] = useState(null);
+  const csvInputRef = useRef(null);
+
   const [formData, setFormData] = useState({
     itemCode: "", // Represents Hex Code (4-digit ID)
     itemName: "",
-    category: "Spares",
+    category: "Spares_Config",
     trackingType: "Serialized",
     ratings: "", // KVA
     volt: "", // DC Voltage
     amp: "", // Current Rating
-    revision: "",
     addOnPartNumber: "",
     technicalSpecs: {}, // For "Specs Details"
     make: "",
     averageUnitCost: "", // Represents Price
+    minStockLevel: 0,
+    maxStockLevel: 0,
     status: "Available",
   });
 
@@ -53,13 +62,10 @@ function SpareParts({ pageName = "Production" }) {
       // or the API handles it if we pass a param (currently API returns all limit 20. We'll need to fetch all or pass category)
       // Since API GET doesn't filter by category yet, we'll fetch and filter.
       // Ideal: Update GET /api/production/items?category=Spares
-      const res = await fetch("/api/production/items");
+      const res = await fetch("/api/production/config/spares");
       const json = await res.json();
       if (json.success) {
-        const sparesOnly = (json.data || []).filter(
-          (item) => item.category === "Spares",
-        );
-        setItemsList(sparesOnly);
+        setItemsList(json.data || []);
       }
     } catch (error) {
       console.error("Error fetching spares:", error);
@@ -89,16 +95,17 @@ function SpareParts({ pageName = "Production" }) {
     setFormData({
       itemCode: "",
       itemName: "",
-      category: "Spares",
+      category: "Spares_Config",
       trackingType: "Serialized",
       ratings: "",
       volt: "",
       amp: "",
-      revision: "",
       addOnPartNumber: "",
       technicalSpecs: {},
       make: "",
       averageUnitCost: "",
+      minStockLevel: 0,
+      maxStockLevel: 0,
       status: "Available",
     });
     setSpecsInput("");
@@ -112,16 +119,17 @@ function SpareParts({ pageName = "Production" }) {
     setFormData({
       itemCode: item.itemCode || "",
       itemName: item.itemName || "",
-      category: "Spares",
+      category: "Spares_Config",
       trackingType: item.trackingType || "Serialized",
       ratings: item.ratings || "",
       volt: item.volt || "",
       amp: item.amp || "",
-      revision: item.revision || "",
       addOnPartNumber: item.addOnPartNumber || "",
       technicalSpecs: item.technicalSpecs || {},
       make: item.make || "",
       averageUnitCost: item.averageUnitCost || "",
+      minStockLevel: item.minStockLevel || 0,
+      maxStockLevel: item.maxStockLevel || 0,
       status: item.status || "Available",
     });
 
@@ -141,7 +149,7 @@ function SpareParts({ pageName = "Production" }) {
     if (!window.confirm("Are you sure you want to delete this spare config?"))
       return;
     try {
-      const res = await fetch(`/api/production/items?id=${id}`, {
+      const res = await fetch(`/api/production/config/spares?id=${id}`, {
         method: "DELETE",
       });
       if (res.ok) {
@@ -173,9 +181,14 @@ function SpareParts({ pageName = "Production" }) {
         });
       }
 
-      const payload = { ...formData, technicalSpecs: parsedSpecs };
+      const payload = {
+        ...formData,
+        technicalSpecs: parsedSpecs,
+        // Auto-generate itemCode if not present (for configs)
+        itemCode: formData.itemCode || `CFG-${Date.now().toString(36).toUpperCase()}`
+      };
 
-      let url = "/api/production/items";
+      let url = "/api/production/config/spares";
       let method = "POST";
 
       if (isEditing) {
@@ -203,28 +216,184 @@ function SpareParts({ pageName = "Production" }) {
     }
   };
 
+  const CSV_HEADERS = [
+    "itemCode",
+    "itemName",
+    "make",
+    "ratings",
+    "volt",
+    "amp",
+    "addOnPartNumber",
+    "minStockLevel",
+    "maxStockLevel",
+    "technicalSpecs",
+  ];
+
+  const handleCsvFile = (e) => {
+    setCsvError("");
+    setCsvRows([]);
+    setUploadResult(null);
+    const file = e.target.files[0];
+    if (!file) return;
+    if (!file.name.endsWith(".csv")) {
+      setCsvError("Please upload a valid .csv file.");
+      return;
+    }
+    const reader = new FileReader();
+    reader.onload = (evt) => {
+      const text = evt.target.result;
+      const lines = text.trim().split("\n");
+      if (lines.length < 2) {
+        setCsvError("CSV must have a header row and at least one data row.");
+        return;
+      }
+      const headers = lines[0]
+        .split(",")
+        .map((h) => h.trim().replace(/"/g, ""));
+      const parsed = lines.slice(1).map((line, i) => {
+        const values = line.split(",").map((v) => v.trim().replace(/"/g, ""));
+        const row = {};
+        headers.forEach((h, idx) => {
+          row[h] = values[idx] || "";
+        });
+        row._rowNum = i + 2;
+
+        // Pre-validation logic
+        const exists = itemsList.some(item => item.itemCode?.toLowerCase() === row.itemCode?.toLowerCase());
+        row._isUpdate = exists;
+
+        row._error = !row.itemCode
+          ? "itemCode is required"
+          : !row.itemName
+            ? "itemName is required"
+            : null;
+        return row;
+      });
+      setCsvRows(parsed);
+      setShowCsvModal(true);
+    };
+    reader.readAsText(file);
+    e.target.value = "";
+  };
+
+  const handleCsvUpload = async () => {
+    const validRows = csvRows
+      .filter((r) => !r._error)
+      .map((r) => {
+        const { _rowNum, _error, _isUpdate, ...rest } = r;
+        if (rest.itemCode) rest.itemCode = rest.itemCode.trim().toLowerCase();
+        if (rest.itemName) rest.itemName = rest.itemName.trim().toLowerCase();
+        if (rest.make) rest.make = rest.make.trim().toLowerCase();
+
+        // Parse technicalSpecs string into object
+        if (typeof rest.technicalSpecs === "string" && rest.technicalSpecs) {
+          const specObj = {};
+          const pairs = rest.technicalSpecs.split(";");
+          pairs.forEach((p) => {
+            const [key, val] = p.split(":");
+            if (key && val) {
+              specObj[key.trim().toLowerCase()] = val.trim().toLowerCase();
+            }
+          });
+          rest.technicalSpecs = specObj;
+        } else {
+          rest.technicalSpecs = {};
+        }
+
+        // Parse numbers
+        rest.minStockLevel = rest.minStockLevel ? Number(rest.minStockLevel) : 0;
+        rest.maxStockLevel = rest.maxStockLevel ? Number(rest.maxStockLevel) : 0;
+
+        return rest;
+      });
+
+    if (validRows.length === 0) {
+      setCsvError("No valid rows to upload.");
+      return;
+    }
+
+    setIsUploading(true);
+    try {
+      const res = await fetch("/api/production/config/spares", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(validRows),
+      });
+      const json = await res.json();
+      setUploadResult(json.results);
+      if (json.success) {
+        fetchSpares();
+      } else {
+        setCsvError(json.results?.errors?.[0]?.error || json.error || "Upload failed.");
+      }
+    } catch (error) {
+      console.error("CSV Upload Error:", error);
+      setCsvError("Upload failed. Please try again.");
+    } finally {
+      setIsUploading(false);
+    }
+  };
+
+  const downloadTemplate = () => {
+    const header = CSV_HEADERS.join(",");
+    const example = [
+      "SPR-101",
+      "Control Card Assembly",
+      "Techser",
+      "5 KVA",
+      "192 VDC",
+      "20A",
+      "20A",
+      "TC-7805-MOD",
+      "100",
+      "1000",
+      "PCB:FR4;Thickness:1.6mm",
+    ].join(",");
+    const blob = new Blob([header + "\n" + example], { type: "text/csv" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = "spares_config_template.csv";
+    a.click();
+    URL.revokeObjectURL(url);
+  };
+
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
           <h2 className="text-xl font-bold text-slate-900">
-            Service & Spare Kits
+            Spare Configuration
           </h2>
           <Breadcrumb pageName={pageName} subPageName="Spares Config" />
         </div>
         {!showForm && (
-          <button
-            onClick={handleAddNew}
-            className="flex items-center gap-2 rounded-xl bg-indigo-600 px-4 py-2 text-sm font-bold text-white hover:bg-indigo-500 transition-all shadow-sm focus:ring-2 focus:ring-indigo-600 focus:ring-offset-2"
-          >
-            <Plus className="w-4 h-4" /> Add Spare Kit
-          </button>
+          <div className="flex gap-2">
+            <input
+              type="file"
+              ref={csvInputRef}
+              className="hidden"
+              accept=".csv"
+              onChange={handleCsvFile}
+            />
+            <button
+              onClick={() => csvInputRef.current.click()}
+              className="flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-2 text-sm font-bold text-slate-600 hover:bg-slate-50 transition-all shadow-sm"
+            >
+              <Upload className="w-4 h-4" /> Import CSV
+            </button>
+            <button
+              onClick={handleAddNew}
+              className="flex items-center gap-2 rounded-xl bg-indigo-600 px-4 py-2 text-sm font-bold text-white hover:bg-indigo-500 transition-all shadow-sm focus:ring-2 focus:ring-indigo-600 focus:ring-offset-2"
+            >
+              <Plus className="w-4 h-4" /> Add Spare Config
+            </button>
+          </div>
         )}
       </div>
 
       <p className="text-slate-500 text-sm">
-        Configure high-value components and subsets meant for field repairs and
-        service kits.
+        Define technical specifications for spares. These configurations will be used to build and track stock entries.
       </p>
 
       <div className="space-y-4">
@@ -234,7 +403,7 @@ function SpareParts({ pageName = "Production" }) {
             <input
               type="text"
               className="block w-full pl-9 pr-4 py-2.5 rounded-xl border-0 text-slate-900 shadow-sm ring-1 ring-inset ring-slate-100 placeholder:text-slate-400 focus:ring-2 focus:ring-indigo-600 sm:text-sm font-medium transition-all"
-              placeholder="Search config ID, name, or part number..."
+              placeholder="Search spare name, part number, or specs..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
             />
@@ -265,11 +434,8 @@ function SpareParts({ pageName = "Production" }) {
             <table className="w-full text-left border-collapse">
               <thead>
                 <tr className="bg-slate-50/50 text-slate-400 uppercase tracking-widest text-[10px] font-bold border-b border-slate-100">
-                  {visibleColumns.hexCode && (
-                    <th className="py-4 px-6 whitespace-nowrap">Config ID</th>
-                  )}
                   {visibleColumns.itemName && (
-                    <th className="py-4 px-6">Name & Revision</th>
+                    <th className="py-4 px-6">Name</th>
                   )}
                   {visibleColumns.ratings && (
                     <th className="py-4 px-6">Ratings</th>
@@ -279,9 +445,6 @@ function SpareParts({ pageName = "Production" }) {
                   )}
                   {visibleColumns.makePrice && (
                     <th className="py-4 px-6 whitespace-nowrap">Make</th>
-                  )}
-                  {visibleColumns.status && (
-                    <th className="py-4 px-6 text-center">Status</th>
                   )}
                   {visibleColumns.actions && (
                     <th className="py-4 px-6 text-right w-24">Actions</th>
@@ -294,13 +457,6 @@ function SpareParts({ pageName = "Production" }) {
                     key={item._id}
                     className="hover:bg-indigo-50/30 transition-colors group"
                   >
-                    {visibleColumns.hexCode && (
-                      <td className="py-4 px-6">
-                        <span className="font-mono text-xs font-bold text-indigo-600 bg-indigo-50 px-2 py-1 rounded-md border border-indigo-100">
-                          {item.itemCode}
-                        </span>
-                      </td>
-                    )}
 
                     {visibleColumns.itemName && (
                       <td className="py-4 px-6">
@@ -308,11 +464,6 @@ function SpareParts({ pageName = "Production" }) {
                           {item.itemName}
                         </div>
                         <div className="text-[11px] text-slate-500 flex items-center gap-2 mt-0.5">
-                          {item.revision && (
-                            <span className="uppercase text-slate-400">
-                              {item.revision}
-                            </span>
-                          )}
                           {item.addOnPartNumber && (
                             <span className="bg-slate-100 px-1.5 rounded">
                               {item.addOnPartNumber}
@@ -347,23 +498,6 @@ function SpareParts({ pageName = "Production" }) {
                       </td>
                     )}
 
-                    {visibleColumns.status && (
-                      <td className="py-4 px-6 text-center">
-                        <span
-                          className={`inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-widest ${
-                            item.status === "Available"
-                              ? "bg-emerald-100 text-emerald-700"
-                              : item.status === "Buffer"
-                                ? "bg-amber-100 text-amber-700"
-                                : item.status === "Consumed"
-                                  ? "bg-slate-100 text-slate-600"
-                                  : "bg-rose-100 text-rose-700"
-                          }`}
-                        >
-                          {item.status || "Available"}
-                        </span>
-                      </td>
-                    )}
 
                     {visibleColumns.actions && (
                       <td className="py-4 px-6">
@@ -401,7 +535,7 @@ function SpareParts({ pageName = "Production" }) {
           >
             <div className="flex items-center justify-between border-b border-slate-100 pb-4">
               <h3 className="text-lg font-bold text-slate-900 pb-2 border-b-2 border-indigo-600 inline-block">
-                {isEditing ? "Edit Spare Config" : "New Spare Registration"}
+                {isEditing ? "Edit Spare Config" : "New Spare Configuration"}
               </h3>
             </div>
 
@@ -421,41 +555,7 @@ function SpareParts({ pageName = "Production" }) {
                     Identity & Naming
                   </h4>
                 </div>
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="space-y-1.5">
-                    <label className="text-xs font-bold text-slate-500 uppercase tracking-wider">
-                      Configuration ID (Unique)
-                    </label>
-                    <input
-                      type="text"
-                      required
-                      placeholder="e.g. SP-PCB-01"
-                      className="block w-full px-4 py-2.5 rounded-xl border-0 text-slate-900 shadow-sm ring-1 ring-inset ring-slate-200 focus:ring-2 focus:ring-indigo-600 sm:text-sm font-mono uppercase bg-white"
-                      value={formData.itemCode}
-                      onChange={(e) =>
-                        setFormData({
-                          ...formData,
-                          itemCode: e.target.value.toUpperCase(),
-                        })
-                      }
-                    />
-                  </div>
-                  <div className="space-y-1.5">
-                    <label className="text-xs font-bold text-slate-500 uppercase tracking-wider">
-                      Revision
-                    </label>
-                    <input
-                      type="text"
-                      placeholder="v1.0"
-                      className="block w-full px-4 py-2.5 rounded-xl border-0 text-slate-900 shadow-sm ring-1 ring-inset ring-slate-200 focus:ring-2 focus:ring-indigo-600 sm:text-sm bg-white"
-                      value={formData.revision}
-                      onChange={(e) =>
-                        setFormData({ ...formData, revision: e.target.value })
-                      }
-                    />
-                  </div>
-                </div>
-                <div className="space-y-1.5">
+                <div className="space-y-1.5 col-span-2">
                   <label className="text-xs font-bold text-slate-500 uppercase tracking-wider">
                     Item Name (Spare Name)
                   </label>
@@ -541,6 +641,34 @@ function SpareParts({ pageName = "Production" }) {
                       }
                     />
                   </div>
+                  <div className="space-y-1.5">
+                    <label className="text-xs font-bold text-slate-500 uppercase tracking-wider">
+                      Min Buffer
+                    </label>
+                    <input
+                      type="number"
+                      placeholder="100"
+                      className="block w-full px-4 py-2.5 rounded-xl border-0 text-slate-900 shadow-sm ring-1 ring-inset ring-slate-200 focus:ring-2 focus:ring-indigo-600 sm:text-sm bg-white"
+                      value={formData.minStockLevel}
+                      onChange={(e) =>
+                        setFormData({ ...formData, minStockLevel: e.target.value })
+                      }
+                    />
+                  </div>
+                  <div className="space-y-1.5">
+                    <label className="text-xs font-bold text-slate-500 uppercase tracking-wider">
+                      Max Buffer
+                    </label>
+                    <input
+                      type="number"
+                      placeholder="1000"
+                      className="block w-full px-4 py-2.5 rounded-xl border-0 text-slate-900 shadow-sm ring-1 ring-inset ring-slate-200 focus:ring-2 focus:ring-indigo-600 sm:text-sm bg-white"
+                      value={formData.maxStockLevel}
+                      onChange={(e) =>
+                        setFormData({ ...formData, maxStockLevel: e.target.value })
+                      }
+                    />
+                  </div>
                 </div>
 
                 <div className="space-y-1.5">
@@ -574,23 +702,6 @@ function SpareParts({ pageName = "Production" }) {
                   </p>
                 </div>
 
-                <div className="space-y-1.5">
-                  <label className="text-xs font-bold text-slate-500 uppercase tracking-wider">
-                    Master Status
-                  </label>
-                  <select
-                    className="block w-full px-4 py-2.5 rounded-xl border-0 text-slate-900 shadow-sm ring-1 ring-inset ring-slate-200 focus:ring-2 focus:ring-indigo-600 sm:text-sm font-medium bg-white"
-                    value={formData.status}
-                    onChange={(e) =>
-                      setFormData({ ...formData, status: e.target.value })
-                    }
-                  >
-                    <option value="Buffer">Buffer (Pending Trial)</option>
-                    <option value="Available">Available (Active)</option>
-                    <option value="Consumed">Consumed (Discontinued)</option>
-                    <option value="Scrapped">Scrapped</option>
-                  </select>
-                </div>
               </div>
             </div>
 
@@ -616,6 +727,174 @@ function SpareParts({ pageName = "Production" }) {
               </button>
             </div>
           </form>
+        </div>
+      )}
+
+      {showCsvModal && (
+        <div className="fixed inset-0 z-[60] flex items-center justify-center bg-slate-900/60 backdrop-blur-sm p-4">
+          <div className="bg-white rounded-3xl shadow-2xl w-full max-w-6xl max-h-[90vh] flex flex-col overflow-hidden animate-in zoom-in-95 duration-200">
+            <div className="p-6 border-b border-slate-100 flex items-center justify-between bg-slate-50/30">
+              <div>
+                <h3 className="text-xl font-bold text-slate-900 flex items-center gap-2">
+                  <div className="p-2 bg-indigo-100 rounded-lg">
+                    <Upload className="w-5 h-5 text-indigo-600" />
+                  </div>
+                  Preview Spare Config Import
+                </h3>
+                <p className="text-sm text-slate-500 mt-1">Review the data below before final synchronization.</p>
+              </div>
+              <div className="flex items-center gap-3">
+                <button
+                  onClick={downloadTemplate}
+                  className="flex items-center gap-2 px-4 py-2 text-xs font-bold text-indigo-600 hover:bg-indigo-50 rounded-xl transition-colors"
+                >
+                  <Download className="w-4 h-4" />
+                  Template
+                </button>
+                <button
+                  onClick={() => {
+                    setShowCsvModal(false);
+                    setCsvRows([]);
+                    setCsvError("");
+                    setUploadResult(null);
+                  }}
+                  className="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-full transition-colors"
+                >
+                  <X className="w-6 h-6" />
+                </button>
+              </div>
+            </div>
+
+            <div className="p-6 flex-1 overflow-hidden flex flex-col">
+              {uploadResult && (
+                <div className={`mb-4 p-4 rounded-2xl text-sm font-semibold flex items-center justify-between shadow-sm border ${uploadResult.errors?.length ? "bg-amber-50 text-amber-700 border-amber-200" : "bg-emerald-50 text-emerald-700 border-emerald-200"}`}>
+                  <div className="flex items-center gap-3">
+                    <div className={`w-3 h-3 rounded-full animate-pulse ${uploadResult.errors?.length ? "bg-amber-500" : "bg-emerald-500"}`}></div>
+                    <span>
+                      Successfully processed: <b className="text-lg mx-1">{uploadResult.created + uploadResult.updated}</b> rows
+                      <span className="mx-2 opacity-30">|</span>
+                      New: <b>{uploadResult.created}</b>
+                      <span className="mx-2 opacity-30">|</span>
+                      Updated: <b>{uploadResult.updated}</b>
+                      {uploadResult.errors?.length > 0 && (
+                        <>
+                          <span className="mx-2 opacity-30">|</span>
+                          Failed: <b className="text-rose-600">{uploadResult.errors.length}</b>
+                        </>
+                      )}
+                    </span>
+                  </div>
+                </div>
+              )}
+
+              {csvError && (
+                <div className="mb-4 p-4 rounded-2xl text-sm font-semibold bg-rose-50 text-rose-600 border border-rose-100 flex items-center gap-3">
+                  <AlertCircle className="w-5 h-5 sr-0" />
+                  {csvError}
+                </div>
+              )}
+
+              <div className="flex-1 overflow-hidden border border-slate-200 rounded-2xl bg-white shadow-sm flex flex-col">
+                <div className="overflow-y-auto flex-1 scrollbar-thin scrollbar-thumb-slate-200">
+                  <table className="w-full text-xs text-left border-collapse">
+                    <thead className="sticky top-0 z-20 shadow-sm">
+                      <tr className="bg-slate-50 text-[10px] font-bold text-slate-400 uppercase tracking-widest border-b border-slate-200">
+                        <th className="py-4 px-6 bg-slate-50">#</th>
+                        <th className="py-4 px-6 bg-slate-50">Code</th>
+                        <th className="py-4 px-6 bg-slate-50">Spare Name</th>
+                        <th className="py-4 px-6 bg-slate-50">Make</th>
+                        <th className="py-4 px-6 bg-slate-50">Volt / Amp</th>
+                        <th className="py-4 px-6 bg-slate-50 text-center">Status</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-slate-100">
+                      {csvRows.map((row) => (
+                        <tr
+                          key={row._rowNum}
+                          className={`${row._error ? "bg-rose-50/30" : row._isUpdate ? "bg-amber-50/10" : "hover:bg-slate-50/50"} transition-colors`}
+                        >
+                          <td className="py-3 px-6 text-slate-400 font-mono italic">{row._rowNum}</td>
+                          <td className="py-3 px-6 font-mono font-bold text-indigo-600">{row.itemCode}</td>
+                          <td className="py-3 px-6 font-semibold text-slate-700">{row.itemName}</td>
+                          <td className="py-3 px-6 font-bold text-slate-500 uppercase">{row.make}</td>
+                          <td className="py-3 px-6 text-slate-600">{row.ratings || "-"}</td>
+                          <td className="py-3 px-6">
+                            <div className="flex justify-center">
+                              {row._error ? (
+                                <span className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-rose-50 text-rose-600 text-[10px] font-black uppercase ring-1 ring-rose-200/50">
+                                  <AlertCircle className="w-3 h-3" /> Error
+                                </span>
+                              ) : row._isUpdate ? (
+                                <span className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-amber-50 text-amber-600 text-[10px] font-black uppercase ring-1 ring-amber-200/50">
+                                  <Edit className="w-3 h-3 text-amber-500" /> Update
+                                </span>
+                              ) : (
+                                <span className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-emerald-50 text-emerald-600 text-[10px] font-black uppercase ring-1 ring-emerald-200/50">
+                                  <Check className="w-3 h-3 text-emerald-500" /> New
+                                </span>
+                              )}
+                            </div>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            </div>
+
+            <div className="p-6 border-t border-slate-100 bg-slate-50/30 flex justify-between items-center">
+              <div className="flex gap-4">
+                <div className="flex flex-col">
+                  <span className="text-[10px] text-slate-400 uppercase font-bold tracking-widest">Valid Entries</span>
+                  <span className="text-lg font-black text-emerald-600 leading-tight">
+                    {csvRows.filter(r => !r._error).length} <span className="text-xs font-normal text-slate-400">/ {csvRows.length}</span>
+                  </span>
+                </div>
+                {csvRows.some(r => r._isUpdate) && (
+                  <div className="flex flex-col border-l border-slate-200 pl-4">
+                    <span className="text-[10px] text-slate-400 uppercase font-bold tracking-widest">Existing Updates</span>
+                    <span className="text-lg font-black text-amber-500 leading-tight">
+                      {csvRows.filter(r => !r._error && r._isUpdate).length}
+                    </span>
+                  </div>
+                )}
+              </div>
+              <div className="flex gap-3">
+                <button
+                  onClick={() => {
+                    setShowCsvModal(false);
+                    setCsvRows([]);
+                  }}
+                  className="px-6 py-2.5 text-sm font-bold text-slate-600 hover:bg-slate-200 rounded-xl transition-all"
+                >
+                  Discard
+                </button>
+                {!uploadResult && (
+                  <button
+                    onClick={handleCsvUpload}
+                    disabled={isUploading}
+                    className="flex items-center gap-2 px-8 py-2.5 text-sm font-bold text-white bg-indigo-600 hover:bg-indigo-500 rounded-xl shadow-lg shadow-indigo-100 transition-all disabled:opacity-60"
+                  >
+                    {isUploading ? (
+                      <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                    ) : (
+                      <Check className="w-4 h-4" />
+                    )}
+                    Import {csvRows.filter((r) => !r._error).length} Items
+                  </button>
+                )}
+                {uploadResult && (
+                  <button
+                    onClick={() => setShowCsvModal(false)}
+                    className="px-8 py-2.5 text-sm font-bold text-white bg-slate-900 hover:bg-slate-800 rounded-xl transition-all"
+                  >
+                    Done
+                  </button>
+                )}
+              </div>
+            </div>
+          </div>
         </div>
       )}
     </div>

@@ -22,19 +22,29 @@ export async function GET(req) {
 
     const { searchParams } = new URL(req.url);
     const search = searchParams.get("search");
+    const category = searchParams.get("category");
 
     let query = {};
     if (search) {
-      query = {
-        $or: [
-          { itemCode: { $regex: search, $options: "i" } },
-          { itemName: { $regex: search, $options: "i" } },
-          { description: { $regex: search, $options: "i" } },
-        ],
-      };
+      query.$or = [
+        { itemCode: { $regex: search, $options: "i" } },
+        { itemName: { $regex: search, $options: "i" } },
+        { description: { $regex: search, $options: "i" } },
+      ];
     }
 
-    const items = await Item.find(query).limit(20).lean();
+    if (category) {
+      if (category.includes(",")) {
+        query.category = { $in: category.split(",") };
+      } else {
+        query.category = category;
+      }
+    } else {
+      // By default, exclude Configurations from the general Component list
+      query.category = { $nin: ["Spares_Config", "Product_Config"] };
+    }
+
+    const items = await Item.find(query).limit(100).lean();
     return NextResponse.json({ success: true, data: items });
   } catch (error) {
     console.error("GET /api/production/items error:", error);
@@ -105,11 +115,13 @@ export async function POST(req) {
         itemToSave.description = parts.join(" - ").toLowerCase();
       }
 
-      await Item.create({
+      const created = await Item.create({
         ...itemToSave,
         factoryId: itemToSave.factoryId || factoryId,
       });
       results.created++;
+      if (!Array.isArray(results.data)) results.data = [];
+      results.data.push(created);
     } catch (err) {
       results.errors.push({ itemCode: item.itemCode, error: err.message });
     }

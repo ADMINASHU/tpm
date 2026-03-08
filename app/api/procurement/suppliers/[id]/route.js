@@ -3,6 +3,7 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import dbConnect from "@/lib/db";
 import Supplier from "@/lib/models/Supplier";
+import Item from "@/lib/models/Item";
 
 export async function GET(req, { params }) {
   try {

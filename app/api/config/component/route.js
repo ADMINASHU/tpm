@@ -38,7 +38,7 @@ export async function PUT(req) {
     let config = await SystemConfig.findOneAndUpdate(
       { type: "COMPONENT_CONFIG" },
       { $set: { categories, baseUoms, makes } },
-      { new: true, upsert: true },
+      { upsert: true, returnDocument: "after" },
     );
 
     return NextResponse.json({ success: true, data: config });

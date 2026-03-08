@@ -3,6 +3,7 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import dbConnect from "@/lib/db";
 import Supplier from "@/lib/models/Supplier";
+import Item from "@/lib/models/Item";
 
 export const dynamic = "force-dynamic";
 
@@ -15,7 +16,7 @@ export async function GET(req) {
 
     const factoryId = session?.user?.factoryId;
     const suppliers = await Supplier.find({ factoryId })
-      .populate("agreedProducts.item", "itemCode itemName description hsnCode")
+      .populate("agreedProducts.configId")
       .lean();
 
     return NextResponse.json({ success: true, data: suppliers });
