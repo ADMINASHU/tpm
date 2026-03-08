@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useSession } from "next-auth/react";
 import { Database, Server } from "lucide-react";
 
 function loadPref(key, fallback = true) {
@@ -16,6 +17,7 @@ function loadPref(key, fallback = true) {
 }
 
 export default function DBStatus() {
+    const { status: sessionStatus } = useSession();
     const [visible, setVisible] = useState(true);
     const [status, setStatus] = useState("checking");
     const [node, setNode] = useState("...");
@@ -108,7 +110,7 @@ export default function DBStatus() {
         };
     }, [visible, connectionInfo.isSlow]);
 
-    if (!visible) return null;
+    if (!visible || sessionStatus !== "authenticated") return null;
 
     const dot = {
         connected: "bg-emerald-400",
@@ -126,26 +128,54 @@ export default function DBStatus() {
 
     return (
         <div className="flex items-center space-x-3">
-            {/* Global Alert Overlay */}
+            {/* Global Alert Overlay - Centered Modal */}
             {status === 'error' && (
-                <div className="fixed inset-x-0 top-0 z-[9999] bg-red-600 text-white py-3 px-6 shadow-2xl animate-in slide-in-from-top duration-500">
-                    <div className="max-w-7xl mx-auto flex items-center justify-between">
-                        <div className="flex items-center gap-3">
-                            <div className="bg-white/20 p-2 rounded-full animate-pulse">
-                                <Database className="w-5 h-5 text-white" />
+                <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 overflow-hidden">
+                    {/* Backdrop */}
+                    <div className="absolute inset-0 bg-slate-900/60 backdrop-blur-md animate-in fade-in duration-300" />
+
+                    {/* Modal Card */}
+                    <div className="relative bg-white rounded-[2rem] shadow-[0_32px_96px_rgba(0,0,0,0.3)] overflow-hidden max-w-sm w-full animate-in zoom-in-95 fade-in duration-300 border border-slate-200">
+                        {/* Red Header Section */}
+                        <div className="bg-red-600 p-8 flex flex-col items-center text-center text-white relative">
+                            {/* Decorative background ping */}
+                            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-32 h-32 bg-white/10 rounded-full animate-ping duration-[3000ms]" />
+
+                            <div className="bg-white/20 p-5 rounded-full mb-6 relative z-10">
+                                <Database className="w-12 h-12 text-white" />
                             </div>
-                            <div>
-                                <h4 className="text-sm font-black uppercase tracking-wider">Database Connection Lost</h4>
-                                <p className="text-[11px] font-medium opacity-90">Slow network or server instability detected. Please check your internet or switch to a faster connection.</p>
-                            </div>
+                            <h2 className="text-2xl font-black uppercase tracking-tight mb-3 relative z-10">Database Offline</h2>
+                            <p className="text-xs font-bold opacity-80 uppercase tracking-widest relative z-10">Connection Lost</p>
                         </div>
-                        <div className="flex items-center gap-4">
-                            <button
-                                onClick={() => window.location.reload()}
-                                className="bg-white text-red-600 px-4 py-1.5 rounded-lg text-xs font-black uppercase hover:bg-slate-100 transition-all active:scale-95 shadow-lg"
-                            >
-                                Reconnect Now
-                            </button>
+
+                        {/* Body Section */}
+                        <div className="p-8 bg-white flex flex-col gap-6">
+                            <div className="text-center space-y-3">
+                                <p className="text-sm font-bold text-slate-800 leading-relaxed">
+                                    Slow network or server instability detected.
+                                </p>
+                                <p className="text-xs font-medium text-slate-500 leading-relaxed">
+                                    We are unable to sync with the central server. Please check your internet or switch to a faster network.
+                                </p>
+                            </div>
+
+                            <div className="space-y-3">
+                                <button
+                                    onClick={() => window.location.reload()}
+                                    className="w-full bg-red-600 text-white py-4 rounded-2xl font-black uppercase tracking-[0.2em] text-[10px] hover:bg-red-700 transition-all active:scale-[0.97] shadow-xl shadow-red-200/50 flex items-center justify-center gap-3 group"
+                                >
+                                    Reconnect Now
+                                    <div className="w-1.5 h-1.5 bg-white rounded-full animate-pulse" />
+                                </button>
+
+                                <div className="flex items-center justify-center gap-3 py-1 text-[10px] font-black text-slate-400 uppercase tracking-widest">
+                                    <span className="flex h-1.5 w-1.5 relative">
+                                        <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-amber-400 opacity-75"></span>
+                                        <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-amber-500"></span>
+                                    </span>
+                                    Background auto-retry active
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>

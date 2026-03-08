@@ -2,6 +2,7 @@ import "./globals.css";
 import Providers from "@/components/Providers";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
+import CompatibilityCheck from "@/components/CompatibilityCheck";
 
 export const metadata = {
   title: "Techser Plant Management App",
@@ -11,9 +12,10 @@ export const metadata = {
 export default function RootLayout({ children }) {
   return (
     <html lang="en" className="light" style={{ colorScheme: 'light' }} suppressHydrationWarning>
-      <body className={`font-sans antialiased min-h-screen flex flex-col bg-slate-50 text-slate-900`}>
+      <body className="font-sans antialiased min-h-screen flex flex-col bg-slate-50 text-slate-900" suppressHydrationWarning>
         <Providers>
           <Navbar />
+          <CompatibilityCheck />
           <main className="flex-grow flex flex-col">{children}</main>
           <Footer />
         </Providers>

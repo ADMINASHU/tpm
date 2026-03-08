@@ -146,7 +146,7 @@ const navItems = [
     children: [
       { name: "Factory Config", href: "/setup?tab=factory", icon: Factory },
       { name: "Users & Roles", href: "/setup?tab=users", icon: UserCircle2 },
-      { name: "System Info", href: "/setup?tab=system", icon: Info },
+      { name: "System Info", href: "/setup/system-info", icon: Info },
     ],
   },
 ];

@@ -37,7 +37,7 @@ export default function LoginPage() {
         <div className="min-h-screen flex items-center justify-center bg-slate-50 py-12 px-4 sm:px-6 lg:px-8">
             <div className="max-w-md w-full space-y-8 bg-white p-10 rounded-3xl shadow-xl ring-1 ring-slate-100">
                 <div className="text-center flex flex-col items-center">
-                    <div className="h-16 w-16 bg-indigo-50 rounded-2xl flex items-center justify-center mb-4 transition-transform hover:scale-105">
+                    <div className="flex items-center justify-center mb-4 hover:cursor-pointer">
                        <Logo />
                     </div>
                     <p className="mt-2 text-sm text-slate-500 font-medium">
