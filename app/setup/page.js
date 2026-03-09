@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
 import {
   Settings,
@@ -859,7 +859,7 @@ function SystemInfo({ pageName = "Setup" }) {
 }
 
 // ── Main Page ───────────────────────────────────────────────
-export default function SetupPage() {
+function SetupContent() {
   const searchParams = useSearchParams();
   const tabFromUrl = searchParams.get("tab");
   const [activeTab, setActiveTab] = useState(tabFromUrl || "factory");
@@ -926,5 +926,19 @@ export default function SetupPage() {
         </div>
       </div>
     </div>
+  );
+}
+
+export default function SetupPage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="p-8 text-sm text-slate-500 animate-pulse">
+          Loading setup mode...
+        </div>
+      }
+    >
+      <SetupContent />
+    </Suspense>
   );
 }
