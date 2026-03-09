@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
-import { authOptions } from "@/app/api/auth/[...nextauth]/route";
+import { authOptions } from "@/lib/auth";
 import dbConnect from "@/lib/db";
 import Indent from "@/lib/models/Indent";
 import Supplier from "@/lib/models/Supplier";
@@ -18,7 +18,9 @@ export async function POST(req) {
 
     await dbConnect();
 
-    const indent = await Indent.findOne({ _id: indentId, factoryId });
+    const indent = await Indent.findOne({ _id: indentId, factoryId }).populate(
+      "items.suggestedSupplier",
+    );
     if (!indent)
       return NextResponse.json({ error: "Indent not found" }, { status: 404 });
 
@@ -26,33 +28,60 @@ export async function POST(req) {
     const supplierGroups = {};
 
     for (const item of indent.items) {
-      // Find preferred/lowest for this explicit item
-      const mappedSuppliers = await Supplier.find({
-        factoryId,
-        "agreedProducts.itemName": item.itemName,
-      });
+      let selectedSupplier = null;
+      let productRef = null;
 
-      if (mappedSuppliers.length === 0) continue; // Unmapped items break out
-
-      let selectedSupplier = mappedSuppliers[0];
-      let productRef = selectedSupplier.agreedProducts.find(
-        (p) => p.itemName === item.itemName,
-      );
-
-      for (const sup of mappedSuppliers) {
-        const ref = sup.agreedProducts.find(
-          (p) => p.itemName === item.itemName,
+      if (item.suggestedSupplier) {
+        selectedSupplier = item.suggestedSupplier;
+        productRef = selectedSupplier.agreedProducts.find(
+          (p) => p.configId.toString() === item.configId.toString(),
         );
-        if (ref.isPreferred) {
-          selectedSupplier = sup;
-          productRef = ref;
-          break;
+      } else {
+        // Fallback: Find preferred/lowest for this explicit item by configId
+        const mappedSuppliers = await Supplier.find({
+          factoryId,
+          "agreedProducts.configId": item.configId,
+        });
+
+        if (mappedSuppliers.length === 0) {
+          console.warn(
+            `No supplier found for item: ${item.itemName} (${item.configId})`,
+          );
+          continue;
         }
-        if (ref.agreedRate < productRef.agreedRate) {
-          productRef = ref;
-          selectedSupplier = sup;
+
+        // Selection Logic
+        let preferred = mappedSuppliers.find(
+          (s) =>
+            s.agreedProducts.find(
+              (p) => p.configId.toString() === item.configId.toString(),
+            )?.isPreferred,
+        );
+
+        if (preferred) {
+          selectedSupplier = preferred;
+          productRef = preferred.agreedProducts.find(
+            (p) => p.configId.toString() === item.configId.toString(),
+          );
+        } else {
+          // Lowest Price
+          let lowest = null;
+          let minRate = Infinity;
+          for (const s of mappedSuppliers) {
+            const ref = s.agreedProducts.find(
+              (p) => p.configId.toString() === item.configId.toString(),
+            );
+            if (ref && ref.agreedRate < minRate) {
+              minRate = ref.agreedRate;
+              lowest = s;
+              productRef = ref;
+            }
+          }
+          selectedSupplier = lowest;
         }
       }
+
+      if (!selectedSupplier || !productRef) continue;
 
       // Group it
       const sId = selectedSupplier._id.toString();
@@ -68,11 +97,14 @@ export async function POST(req) {
       const finalName = productRef.supplierItemName || item.itemName;
 
       supplierGroups[sId].items.push({
-        itemName: finalName, // ALIAS PRINTING
+        configId: item.configId,
+        configModel: item.configModel,
+        itemName: item.itemName, // Keep internal name
+        supplierItemName: finalName, // ALIAS FOR PO PRINTING
         make: productRef.make || item.make,
         quantity: item.quantity,
         agreedRate: productRef.agreedRate,
-        taxPercent: 18, // Would be driven by HSN realistically
+        taxPercent: productRef.hsnCode ? 18 : 18, // Simplified
       });
 
       supplierGroups[sId].totalAmount += productRef.agreedRate * item.quantity;
@@ -97,7 +129,7 @@ export async function POST(req) {
     }
 
     // Update Indent Status
-    indent.status = "Approved";
+    indent.status = "PO Generated";
     await indent.save();
 
     return NextResponse.json(

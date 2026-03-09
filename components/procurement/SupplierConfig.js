@@ -384,8 +384,8 @@ function SupplierConfig({ pageName = "Procurement" }) {
       {/* Header Section */}
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-xl font-bold text-slate-900 flex items-center gap-2">
-            <Users className="text-indigo-600 h-6 w-6" />
+          <h2 className="text-xl font-black text-slate-800 flex items-center gap-2">
+            <Users className="text-indigo-600 h-5 w-5" />
             Approved Supplier Directory
           </h2>
           <Breadcrumb pageName={pageName} subPageName="Supplier Config" />
@@ -413,9 +413,9 @@ function SupplierConfig({ pageName = "Procurement" }) {
               });
               setShowForm(!showForm);
             }}
-            className="flex items-center gap-2 rounded-xl bg-indigo-600 px-5 py-2.5 text-sm font-bold text-white hover:bg-indigo-500 transition-all shadow-sm"
+            className="flex items-center gap-2 rounded-xl bg-indigo-600 px-4 py-2 text-xs font-bold text-white hover:bg-indigo-700 transition-all shadow-sm"
           >
-            <Plus className="w-4 h-4" />
+            <Plus className="w-3.5 h-3.5" />
             Add Supplier
           </button>
         )}
@@ -458,7 +458,7 @@ function SupplierConfig({ pageName = "Procurement" }) {
             >
               &#8203;
             </span>
-            <div className="relative z-10 inline-block align-bottom bg-white rounded-2xl text-left overflow-hidden shadow-2xl transform transition-all sm:my-8 sm:align-middle sm:max-w-2xl sm:w-full">
+            <div className="relative z-10 inline-block align-bottom bg-white rounded-xl text-left overflow-hidden shadow-2xl transform transition-all sm:my-8 sm:align-middle sm:max-w-2xl sm:w-full">
               <div className="bg-white">
                 <div className="px-6 py-4 bg-slate-50 border-b border-slate-200 flex justify-between items-center">
                   <h3 className="text-sm font-bold text-slate-700 uppercase tracking-wider">
@@ -480,7 +480,7 @@ function SupplierConfig({ pageName = "Procurement" }) {
                   >
                     {/* Basic Information Section */}
                     <div className="md:col-span-2">
-                      <h4 className="text-[10px] font-black text-indigo-500 uppercase tracking-widest mb-3 border-b border-slate-100 pb-1">
+                      <h4 className="text-[10px] font-bold text-indigo-500 uppercase tracking-widest mb-3 border-b border-slate-100 pb-1">
                         Basic Identity
                       </h4>
                     </div>
@@ -499,7 +499,7 @@ function SupplierConfig({ pageName = "Procurement" }) {
                           })
                         }
                         placeholder="Legal Entity Name"
-                        className="block w-full rounded-xl border-slate-200 py-2.5 px-4 text-sm shadow-sm focus:ring-2 focus:ring-indigo-600 focus:border-indigo-600 transition-all outline-none border"
+                        className="block w-full rounded-xl border-slate-200 py-2 px-3 text-sm shadow-sm focus:ring-2 focus:ring-indigo-600 transition-all outline-none border"
                       />
                     </div>
                     <div className="md:col-span-1 space-y-1.5">
@@ -535,13 +535,13 @@ function SupplierConfig({ pageName = "Procurement" }) {
                           })
                         }
                         placeholder="GSTIN Number"
-                        className="block w-full rounded-xl border-slate-200 py-2.5 px-4 text-sm shadow-sm focus:ring-2 focus:ring-indigo-600 focus:border-indigo-600 transition-all outline-none border"
+                        className="block w-full rounded-xl border-slate-200 py-2 px-3 text-sm shadow-sm focus:ring-2 focus:ring-indigo-600 transition-all outline-none border"
                       />
                     </div>
 
                     {/* Contact Information Section */}
                     <div className="md:col-span-2 pt-2">
-                      <h4 className="text-[10px] font-black text-indigo-500 uppercase tracking-widest mb-3 border-b border-slate-100 pb-1">
+                      <h4 className="text-[10px] font-bold text-indigo-500 uppercase tracking-widest mb-3 border-b border-slate-100 pb-1">
                         Contact Details
                       </h4>
                     </div>
@@ -559,7 +559,7 @@ function SupplierConfig({ pageName = "Procurement" }) {
                           })
                         }
                         placeholder="Name of Key Contact"
-                        className="block w-full rounded-xl border-slate-200 py-2.5 px-4 text-sm shadow-sm focus:ring-2 focus:ring-indigo-600 focus:border-indigo-600 transition-all outline-none border"
+                        className="block w-full rounded-xl border-slate-200 py-2 px-3 text-sm shadow-sm focus:ring-2 focus:ring-indigo-600 transition-all outline-none border"
                       />
                     </div>
                     <div className="space-y-1.5">
@@ -577,7 +577,7 @@ function SupplierConfig({ pageName = "Procurement" }) {
                           })
                         }
                         placeholder="sales@vendor.com"
-                        className="block w-full rounded-xl border-slate-200 py-2.5 px-4 text-sm shadow-sm focus:ring-2 focus:ring-indigo-600 focus:border-indigo-600 transition-all outline-none border"
+                        className="block w-full rounded-xl border-slate-200 py-2 px-3 text-sm shadow-sm focus:ring-2 focus:ring-indigo-600 transition-all outline-none border"
                       />
                     </div>
                     <div className="space-y-1.5">
@@ -594,7 +594,7 @@ function SupplierConfig({ pageName = "Procurement" }) {
                           })
                         }
                         placeholder="+91-XXXXXXXXXX"
-                        className="block w-full rounded-xl border-slate-200 py-2.5 px-4 text-sm shadow-sm focus:ring-2 focus:ring-indigo-600 focus:border-indigo-600 transition-all outline-none border"
+                        className="block w-full rounded-xl border-slate-200 py-2 px-3 text-sm shadow-sm focus:ring-2 focus:ring-indigo-600 transition-all outline-none border"
                       />
                     </div>
                     <div className="space-y-1.5">
@@ -634,7 +634,7 @@ function SupplierConfig({ pageName = "Procurement" }) {
 
                     {/* Procurement Terms Section */}
                     <div className="md:col-span-2 pt-2">
-                      <h4 className="text-[10px] font-black text-indigo-500 uppercase tracking-widest mb-3 border-b border-slate-100 pb-1">
+                      <h4 className="text-[10px] font-bold text-indigo-500 uppercase tracking-widest mb-3 border-b border-slate-100 pb-1">
                         Commercial & Logistics
                       </h4>
                     </div>
@@ -851,7 +851,7 @@ function SupplierConfig({ pageName = "Procurement" }) {
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       <span
-                        className={`px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider border ${
+                        className={`px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider border ${
                           s.status === "Blocked"
                             ? "bg-rose-50 text-rose-700 border-rose-100"
                             : "bg-emerald-50 text-emerald-700 border-emerald-100"
@@ -977,25 +977,25 @@ function SupplierConfig({ pageName = "Procurement" }) {
                 </div>
               </div>
 
-              <div className="bg-linear-to-br from-indigo-600 to-indigo-700 p-6 rounded-2xl text-white shadow-lg space-y-4">
-                <h4 className="font-bold flex items-center gap-2">
-                  <TrendingUp className="w-4 h-4 text-indigo-100" />
+              <div className="bg-linear-to-br from-indigo-600 to-indigo-700 p-5 rounded-xl text-white shadow-md space-y-3">
+                <h4 className="text-sm font-bold flex items-center gap-2">
+                  <TrendingUp className="w-3.5 h-3.5 text-indigo-100" />
                   Quick Stats
                 </h4>
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="bg-white/10 p-3 rounded-xl">
-                    <div className="text-[10px] font-bold text-indigo-100 uppercase">
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="bg-white/10 p-2.5 rounded-lg">
+                    <div className="text-[9px] font-bold text-indigo-100 uppercase">
                       Rate Stability
                     </div>
-                    <div className="text-xl font-bold">
+                    <div className="text-lg font-bold">
                       {selectedSupplier.performance?.priceStability || 100}%
                     </div>
                   </div>
-                  <div className="bg-white/10 p-3 rounded-xl">
-                    <div className="text-[10px] font-bold text-indigo-100 uppercase">
+                  <div className="bg-white/10 p-2.5 rounded-lg">
+                    <div className="text-[9px] font-bold text-indigo-100 uppercase">
                       Avg Lead Time
                     </div>
-                    <div className="text-xl font-bold">12 Days</div>
+                    <div className="text-lg font-bold">12 Days</div>
                   </div>
                 </div>
               </div>
@@ -1004,14 +1004,14 @@ function SupplierConfig({ pageName = "Procurement" }) {
             {/* Rates Table Section */}
             <div className="flex-1 space-y-4">
               <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden min-h-[500px]">
-                <div className="px-6 py-4 border-b border-slate-200 flex justify-between items-center bg-slate-50/50">
-                  <h3 className="text-base font-bold text-slate-900 flex items-center gap-2">
-                    <Plus className="w-4 h-4 text-indigo-600" />
+                <div className="px-5 py-3 border-b border-slate-200 flex justify-between items-center bg-slate-50/50">
+                  <h3 className="text-sm font-bold text-slate-800 flex items-center gap-2">
+                    <Plus className="w-3.5 h-3.5 text-indigo-600" />
                     Contractual Item Mappings
                   </h3>
                   <button
                     onClick={() => setIsMapItemModalOpen(true)}
-                    className="bg-indigo-600 text-white px-4 py-2 rounded-xl text-xs font-bold hover:bg-indigo-700 transition-colors shadow-md active:scale-95"
+                    className="bg-indigo-600 text-white px-3 py-1.5 rounded-lg text-xs font-bold hover:bg-indigo-700 transition-colors shadow-sm active:scale-95"
                   >
                     + Map New Item
                   </button>
@@ -1019,12 +1019,12 @@ function SupplierConfig({ pageName = "Procurement" }) {
 
                 <div className="overflow-x-auto">
                   <table className="w-full text-sm text-left">
-                    <thead className="bg-slate-50/80 text-[10px] font-bold text-slate-400 uppercase tracking-widest border-b border-slate-200">
+                    <thead className="bg-slate-50/80 text-[10px] font-bold text-slate-500 uppercase tracking-wider border-b border-slate-200">
                       <tr>
-                        <th className="px-6 py-4">Internal Item</th>
-                        <th className="px-6 py-4">Supplier Alias / HSN</th>
-                        <th className="px-6 py-4">Agreed Contract Rate</th>
-                        <th className="px-6 py-4 text-right">Actions</th>
+                        <th className="px-5 py-3">Internal Item</th>
+                        <th className="px-5 py-3">Supplier Alias / HSN</th>
+                        <th className="px-5 py-3">Agreed Rate</th>
+                        <th className="px-5 py-3 text-right">Actions</th>
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-slate-100">
@@ -1040,7 +1040,7 @@ function SupplierConfig({ pageName = "Procurement" }) {
                                   {product.configId?.itemCode || "NO-CODE"}
                                 </span>
                                 {product.configId?.category && (
-                                  <span className="text-[9px] font-black uppercase tracking-tighter text-indigo-500 bg-indigo-50 px-1.5 py-0.5 rounded border border-indigo-100/50">
+                                  <span className="text-[9px] font-bold uppercase tracking-tighter text-indigo-500 bg-indigo-50 px-1.5 py-0.5 rounded border border-indigo-100/50">
                                     {product.configId.category}
                                   </span>
                                 )}
@@ -1073,14 +1073,14 @@ function SupplierConfig({ pageName = "Procurement" }) {
                                 <span className="text-[10px] font-bold text-slate-400">
                                   {product.currency || "INR"}
                                 </span>
-                                <span className="text-base font-black text-slate-900 leading-none">
+                                <span className="text-sm font-bold text-slate-900 leading-none">
                                   {product.agreedRate?.toLocaleString()}
                                 </span>
                               </div>
                               {product.isPreferred && (
                                 <div className="mt-1 flex items-center gap-1">
                                   <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></div>
-                                  <span className="text-[9px] font-black text-emerald-600 uppercase tracking-widest bg-emerald-50 px-1.5 py-0.5 rounded-full border border-emerald-100">
+                                  <span className="text-[9px] font-bold text-emerald-600 uppercase tracking-widest bg-emerald-50 px-1.5 py-0.5 rounded-full border border-emerald-100">
                                     Primary Source
                                   </span>
                                 </div>
@@ -1322,7 +1322,7 @@ function SupplierConfig({ pageName = "Procurement" }) {
                             agreedRate: e.target.value,
                           })
                         }
-                        className="block w-full rounded-xl border border-slate-200 py-2.5 px-4 text-sm focus:ring-2 focus:ring-indigo-600 outline-none"
+                        className="block w-full rounded-xl border border-slate-200 py-2 px-3 text-sm focus:ring-2 focus:ring-indigo-600 outline-none"
                       />
                     </div>
                     <div className="space-y-1.5">
@@ -1334,7 +1334,7 @@ function SupplierConfig({ pageName = "Procurement" }) {
                         onChange={(e) =>
                           setRateForm({ ...rateForm, currency: e.target.value })
                         }
-                        className="block w-full rounded-xl border border-slate-200 py-2.5 px-4 text-sm focus:ring-2 focus:ring-indigo-600 outline-none bg-white"
+                        className="block w-full rounded-xl border border-slate-200 py-2 px-3 text-sm focus:ring-2 focus:ring-indigo-600 outline-none bg-white font-medium"
                       >
                         <option>INR</option>
                         <option>USD</option>
@@ -1355,7 +1355,7 @@ function SupplierConfig({ pageName = "Procurement" }) {
                         onChange={(e) =>
                           setRateForm({ ...rateForm, hsnCode: e.target.value })
                         }
-                        className="block w-full rounded-xl border border-slate-200 py-2.5 px-4 text-sm outline-none"
+                        className="block w-full rounded-xl border border-slate-200 py-2 px-3 text-sm outline-none"
                       />
                     </div>
                   </div>
@@ -1410,7 +1410,7 @@ function SupplierConfig({ pageName = "Procurement" }) {
                   <button
                     onClick={handleMapItem}
                     disabled={!rateForm.configId || !rateForm.agreedRate}
-                    className="px-6 py-2 text-sm font-bold text-white bg-indigo-600 hover:bg-indigo-700 rounded-xl shadow-md disabled:opacity-50 disabled:grayscale transition-all active:scale-95"
+                    className="px-6 py-2 text-sm font-bold text-white bg-indigo-600 hover:bg-indigo-700 rounded-xl shadow-md disabled:opacity-50 disabled:grayscale transition-all"
                   >
                     Confirm Mapping
                   </button>
@@ -1432,7 +1432,7 @@ function SupplierConfig({ pageName = "Procurement" }) {
             <div className="relative z-10 bg-white rounded-3xl shadow-2xl w-full max-w-2xl overflow-hidden animate-in zoom-in duration-200">
               <div className="px-8 py-6 border-b border-slate-100 flex justify-between items-center">
                 <div>
-                  <h3 className="text-xl font-bold text-slate-900">
+                  <h3 className="text-xl font-black text-slate-900">
                     Commercial Price History
                   </h3>
                   <div className="text-xs font-bold text-indigo-600 flex items-center gap-1.5 mt-1">
