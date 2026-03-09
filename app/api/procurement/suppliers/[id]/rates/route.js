@@ -4,6 +4,8 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import dbConnect from "@/lib/db";
 import Supplier from "@/lib/models/Supplier";
+import ComponentConfig from "@/lib/models/ComponentConfig";
+import SpareConfig from "@/lib/models/SpareConfig";
 
 export async function POST(req, { params }) {
   try {
@@ -54,7 +56,8 @@ export async function POST(req, { params }) {
 
       // Update existing using Mongoose set
       supplier.agreedProducts[existingIndex].configId = productData.configId;
-      supplier.agreedProducts[existingIndex].configModel = productData.configModel;
+      supplier.agreedProducts[existingIndex].configModel =
+        productData.configModel;
       supplier.agreedProducts[existingIndex].supplierItemName =
         productData.supplierItemName;
       supplier.agreedProducts[existingIndex].hsnCode = productData.hsnCode;
@@ -70,7 +73,9 @@ export async function POST(req, { params }) {
 
     await supplier.save();
 
-    const updatedSupplier = await Supplier.findById(id).lean();
+    const updatedSupplier = await Supplier.findById(id)
+      .populate("agreedProducts.configId")
+      .lean();
 
     return NextResponse.json({ success: true, data: updatedSupplier });
   } catch (error) {

@@ -3,6 +3,8 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import dbConnect from "@/lib/db";
 import Supplier from "@/lib/models/Supplier";
+import ComponentConfig from "@/lib/models/ComponentConfig";
+import SpareConfig from "@/lib/models/SpareConfig";
 import Item from "@/lib/models/Item";
 
 export async function GET(req, { params }) {
@@ -14,7 +16,7 @@ export async function GET(req, { params }) {
 
     const { id } = await params;
     const supplier = await Supplier.findById(id)
-      .populate("agreedProducts.item", "itemCode itemName description hsnCode")
+      .populate("agreedProducts.configId")
       .lean();
 
     if (!supplier) {

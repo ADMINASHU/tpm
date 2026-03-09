@@ -3,6 +3,8 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import dbConnect from "@/lib/db";
 import Supplier from "@/lib/models/Supplier";
+import ComponentConfig from "@/lib/models/ComponentConfig";
+import SpareConfig from "@/lib/models/SpareConfig";
 import Item from "@/lib/models/Item";
 
 export const dynamic = "force-dynamic";

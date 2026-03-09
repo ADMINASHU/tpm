@@ -65,7 +65,7 @@ function SupplierConfig({ pageName = "Procurement" }) {
 
   // Map Item Form State
   const [rateForm, setRateForm] = useState({
-    itemId: "",
+    configId: "",
     itemName: "",
     itemCode: "",
     category: "",
@@ -198,7 +198,7 @@ function SupplierConfig({ pageName = "Procurement" }) {
   const handleDelete = async (id, name) => {
     if (
       !window.confirm(
-        `Are you sure you want to delete ${name}? This will also remove all mapped items and rates.`
+        `Are you sure you want to delete ${name}? This will also remove all mapped items and rates.`,
       )
     )
       return;
@@ -232,6 +232,27 @@ function SupplierConfig({ pageName = "Procurement" }) {
     return () => clearTimeout(timer);
   }, [rateForm.searchQuery, rateForm.category]);
 
+  const fetchStockValuation = async (configId) => {
+    try {
+      const res = await fetch(
+        `/api/inventory/transactions?summary=true&ids=${configId}`,
+      );
+      const json = await res.json();
+      if (json.success && json.data && json.data.length > 0) {
+        const stockInfo = json.data[0];
+        setRateForm((prev) => ({
+          ...prev,
+          agreedRate: stockInfo.averageUnitCost
+            ? stockInfo.averageUnitCost.toFixed(2)
+            : prev.agreedRate,
+          hsnCode: stockInfo.hsnCode || prev.hsnCode,
+        }));
+      }
+    } catch (error) {
+      console.error("Failed to fetch stock valuation:", error);
+    }
+  };
+
   const searchItems = async () => {
     try {
       setIsLoadingItems(true);
@@ -240,7 +261,7 @@ function SupplierConfig({ pageName = "Procurement" }) {
       // Search from both ComponentConfig and SpareConfig
       const [compRes, spareRes] = await Promise.all([
         fetch(`/api/production/config/components?search=${query}`),
-        fetch(`/api/production/config/spares?search=${query}`)
+        fetch(`/api/production/config/spares?search=${query}`),
       ]);
 
       const compData = await compRes.json();
@@ -248,15 +269,26 @@ function SupplierConfig({ pageName = "Procurement" }) {
 
       let combined = [];
       if (compData.success) {
-        combined = [...combined, ...compData.data.map(c => ({ ...c, configModel: "ComponentConfig" }))];
+        combined = [
+          ...combined,
+          ...compData.data.map((c) => ({
+            ...c,
+            configModel: "ComponentConfig",
+          })),
+        ];
       }
       if (spareData.success) {
-        combined = [...combined, ...spareData.data.map(s => ({ ...s, configModel: "SpareConfig" }))];
+        combined = [
+          ...combined,
+          ...spareData.data.map((s) => ({ ...s, configModel: "SpareConfig" })),
+        ];
       }
 
       // Filter by category if selected
       if (rateForm.category) {
-        combined = combined.filter(c => c.category?.toLowerCase() === rateForm.category.toLowerCase());
+        combined = combined.filter(
+          (c) => c.category?.toLowerCase() === rateForm.category.toLowerCase(),
+        );
       }
 
       setItemsList(combined);
@@ -268,7 +300,7 @@ function SupplierConfig({ pageName = "Procurement" }) {
   };
 
   const handleMapItem = async () => {
-    if (!rateForm.itemId || !rateForm.agreedRate) return;
+    if (!rateForm.configId || !rateForm.agreedRate) return;
     try {
       const res = await fetch(
         `/api/procurement/suppliers/${selectedSupplier._id}/rates`,
@@ -391,10 +423,11 @@ function SupplierConfig({ pageName = "Procurement" }) {
 
       {saveMessage.text && (
         <div
-          className={`p-4 rounded-xl text-sm font-semibold flex items-center gap-2 ${saveMessage.type === "success"
-            ? "bg-emerald-50 text-emerald-700 border border-emerald-100"
-            : "bg-rose-50 text-rose-700 border border-rose-100"
-            }`}
+          className={`p-4 rounded-xl text-sm font-semibold flex items-center gap-2 ${
+            saveMessage.type === "success"
+              ? "bg-emerald-50 text-emerald-700 border border-emerald-100"
+              : "bg-rose-50 text-rose-700 border border-rose-100"
+          }`}
         >
           {saveMessage.type === "success" ? (
             <Check className="w-4 h-4" />
@@ -429,7 +462,9 @@ function SupplierConfig({ pageName = "Procurement" }) {
               <div className="bg-white">
                 <div className="px-6 py-4 bg-slate-50 border-b border-slate-200 flex justify-between items-center">
                   <h3 className="text-sm font-bold text-slate-700 uppercase tracking-wider">
-                    {isEditing ? "Edit Supplier Profile" : "Register New Supplier"}
+                    {isEditing
+                      ? "Edit Supplier Profile"
+                      : "Register New Supplier"}
                   </h3>
                   <button
                     onClick={() => setShowForm(false)}
@@ -445,7 +480,9 @@ function SupplierConfig({ pageName = "Procurement" }) {
                   >
                     {/* Basic Information Section */}
                     <div className="md:col-span-2">
-                      <h4 className="text-[10px] font-black text-indigo-500 uppercase tracking-widest mb-3 border-b border-slate-100 pb-1">Basic Identity</h4>
+                      <h4 className="text-[10px] font-black text-indigo-500 uppercase tracking-widest mb-3 border-b border-slate-100 pb-1">
+                        Basic Identity
+                      </h4>
                     </div>
                     <div className="space-y-1.5 md:col-span-2">
                       <label className="text-xs font-bold text-slate-500 uppercase px-1">
@@ -456,7 +493,10 @@ function SupplierConfig({ pageName = "Procurement" }) {
                         required
                         value={newSupplier.name}
                         onChange={(e) =>
-                          setNewSupplier({ ...newSupplier, name: e.target.value })
+                          setNewSupplier({
+                            ...newSupplier,
+                            name: e.target.value,
+                          })
                         }
                         placeholder="Legal Entity Name"
                         className="block w-full rounded-xl border-slate-200 py-2.5 px-4 text-sm shadow-sm focus:ring-2 focus:ring-indigo-600 focus:border-indigo-600 transition-all outline-none border"
@@ -501,7 +541,9 @@ function SupplierConfig({ pageName = "Procurement" }) {
 
                     {/* Contact Information Section */}
                     <div className="md:col-span-2 pt-2">
-                      <h4 className="text-[10px] font-black text-indigo-500 uppercase tracking-widest mb-3 border-b border-slate-100 pb-1">Contact Details</h4>
+                      <h4 className="text-[10px] font-black text-indigo-500 uppercase tracking-widest mb-3 border-b border-slate-100 pb-1">
+                        Contact Details
+                      </h4>
                     </div>
                     <div className="space-y-1.5">
                       <label className="text-xs font-bold text-slate-500 uppercase px-1">
@@ -511,7 +553,10 @@ function SupplierConfig({ pageName = "Procurement" }) {
                         type="text"
                         value={newSupplier.contactPerson}
                         onChange={(e) =>
-                          setNewSupplier({ ...newSupplier, contactPerson: e.target.value })
+                          setNewSupplier({
+                            ...newSupplier,
+                            contactPerson: e.target.value,
+                          })
                         }
                         placeholder="Name of Key Contact"
                         className="block w-full rounded-xl border-slate-200 py-2.5 px-4 text-sm shadow-sm focus:ring-2 focus:ring-indigo-600 focus:border-indigo-600 transition-all outline-none border"
@@ -543,7 +588,10 @@ function SupplierConfig({ pageName = "Procurement" }) {
                         type="text"
                         value={newSupplier.phone}
                         onChange={(e) =>
-                          setNewSupplier({ ...newSupplier, phone: e.target.value })
+                          setNewSupplier({
+                            ...newSupplier,
+                            phone: e.target.value,
+                          })
                         }
                         placeholder="+91-XXXXXXXXXX"
                         className="block w-full rounded-xl border-slate-200 py-2.5 px-4 text-sm shadow-sm focus:ring-2 focus:ring-indigo-600 focus:border-indigo-600 transition-all outline-none border"
@@ -557,7 +605,10 @@ function SupplierConfig({ pageName = "Procurement" }) {
                         type="text"
                         value={newSupplier.jurisdiction}
                         onChange={(e) =>
-                          setNewSupplier({ ...newSupplier, jurisdiction: e.target.value })
+                          setNewSupplier({
+                            ...newSupplier,
+                            jurisdiction: e.target.value,
+                          })
                         }
                         placeholder="e.g. Bangalore"
                         className="block w-full rounded-xl border-slate-200 py-2.5 px-4 text-sm shadow-sm focus:ring-2 focus:ring-indigo-600 focus:border-indigo-600 transition-all outline-none border"
@@ -571,7 +622,10 @@ function SupplierConfig({ pageName = "Procurement" }) {
                         rows="2"
                         value={newSupplier.address}
                         onChange={(e) =>
-                          setNewSupplier({ ...newSupplier, address: e.target.value })
+                          setNewSupplier({
+                            ...newSupplier,
+                            address: e.target.value,
+                          })
                         }
                         placeholder="Office No, Street, City, ZIP..."
                         className="block w-full rounded-xl border-slate-200 py-2.5 px-4 text-sm shadow-sm focus:ring-2 focus:ring-indigo-600 focus:border-indigo-600 transition-all outline-none border resize-none"
@@ -580,7 +634,9 @@ function SupplierConfig({ pageName = "Procurement" }) {
 
                     {/* Procurement Terms Section */}
                     <div className="md:col-span-2 pt-2">
-                      <h4 className="text-[10px] font-black text-indigo-500 uppercase tracking-widest mb-3 border-b border-slate-100 pb-1">Commercial & Logistics</h4>
+                      <h4 className="text-[10px] font-black text-indigo-500 uppercase tracking-widest mb-3 border-b border-slate-100 pb-1">
+                        Commercial & Logistics
+                      </h4>
                     </div>
                     <div className="space-y-1.5">
                       <label className="text-xs font-bold text-slate-500 uppercase px-1">
@@ -590,7 +646,10 @@ function SupplierConfig({ pageName = "Procurement" }) {
                         type="text"
                         value={newSupplier.priceBasis}
                         onChange={(e) =>
-                          setNewSupplier({ ...newSupplier, priceBasis: e.target.value })
+                          setNewSupplier({
+                            ...newSupplier,
+                            priceBasis: e.target.value,
+                          })
                         }
                         placeholder="e.g. FOR Destination / Ex-Works"
                         className="block w-full rounded-xl border-slate-200 py-2.5 px-4 text-sm shadow-sm focus:ring-2 focus:ring-indigo-600 focus:border-indigo-600 transition-all outline-none border"
@@ -620,7 +679,10 @@ function SupplierConfig({ pageName = "Procurement" }) {
                         rows="2"
                         value={newSupplier.packingInstructions}
                         onChange={(e) =>
-                          setNewSupplier({ ...newSupplier, packingInstructions: e.target.value })
+                          setNewSupplier({
+                            ...newSupplier,
+                            packingInstructions: e.target.value,
+                          })
                         }
                         placeholder="e.g. No plastic / Use corrugated boxes"
                         className="block w-full rounded-xl border-slate-200 py-2.5 px-4 text-sm shadow-sm focus:ring-2 focus:ring-indigo-600 focus:border-indigo-600 transition-all outline-none border resize-none"
@@ -634,7 +696,10 @@ function SupplierConfig({ pageName = "Procurement" }) {
                         type="text"
                         value={newSupplier.inspectionTerms}
                         onChange={(e) =>
-                          setNewSupplier({ ...newSupplier, inspectionTerms: e.target.value })
+                          setNewSupplier({
+                            ...newSupplier,
+                            inspectionTerms: e.target.value,
+                          })
                         }
                         placeholder="e.g. At Our Works / Third-party"
                         className="block w-full rounded-xl border-slate-200 py-2.5 px-4 text-sm shadow-sm focus:ring-2 focus:ring-indigo-600 focus:border-indigo-600 transition-all outline-none border"
@@ -649,13 +714,15 @@ function SupplierConfig({ pageName = "Procurement" }) {
                         type="text"
                         value={newSupplier.paymentTerms}
                         onChange={(e) =>
-                          setNewSupplier({ ...newSupplier, paymentTerms: e.target.value })
+                          setNewSupplier({
+                            ...newSupplier,
+                            paymentTerms: e.target.value,
+                          })
                         }
                         placeholder="e.g. 60 DAYS FROM THE DATE OF DELIVERY"
                         className="block w-full rounded-xl border-slate-200 py-2.5 px-4 text-sm shadow-sm focus:ring-2 focus:ring-indigo-600 focus:border-indigo-600 transition-all outline-none border"
                       />
                     </div>
-
 
                     <div className="md:col-span-2 space-y-1.5 pt-2">
                       <label className="text-xs font-bold text-slate-500 uppercase px-1">
@@ -667,20 +734,38 @@ function SupplierConfig({ pageName = "Procurement" }) {
                             type="radio"
                             name="status"
                             checked={newSupplier.status === "Approved"}
-                            onChange={() => setNewSupplier({ ...newSupplier, status: "Approved" })}
+                            onChange={() =>
+                              setNewSupplier({
+                                ...newSupplier,
+                                status: "Approved",
+                              })
+                            }
                             className="w-4 h-4 text-emerald-600 focus:ring-emerald-500 border-slate-300"
                           />
-                          <span className={`text-sm font-bold ${newSupplier.status === "Approved" ? "text-emerald-700" : "text-slate-500 group-hover:text-slate-700"}`}>Approved</span>
+                          <span
+                            className={`text-sm font-bold ${newSupplier.status === "Approved" ? "text-emerald-700" : "text-slate-500 group-hover:text-slate-700"}`}
+                          >
+                            Approved
+                          </span>
                         </label>
                         <label className="flex items-center gap-2 cursor-pointer group">
                           <input
                             type="radio"
                             name="status"
                             checked={newSupplier.status === "Blocked"}
-                            onChange={() => setNewSupplier({ ...newSupplier, status: "Blocked" })}
+                            onChange={() =>
+                              setNewSupplier({
+                                ...newSupplier,
+                                status: "Blocked",
+                              })
+                            }
                             className="w-4 h-4 text-rose-600 focus:ring-rose-500 border-slate-300"
                           />
-                          <span className={`text-sm font-bold ${newSupplier.status === "Blocked" ? "text-rose-700" : "text-slate-500 group-hover:text-slate-700"}`}>Blocked</span>
+                          <span
+                            className={`text-sm font-bold ${newSupplier.status === "Blocked" ? "text-rose-700" : "text-slate-500 group-hover:text-slate-700"}`}
+                          >
+                            Blocked
+                          </span>
                         </label>
                       </div>
                     </div>
@@ -765,10 +850,13 @@ function SupplierConfig({ pageName = "Procurement" }) {
                       </div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
-                      <span className={`px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider border ${s.status === "Blocked"
-                        ? "bg-rose-50 text-rose-700 border-rose-100"
-                        : "bg-emerald-50 text-emerald-700 border-emerald-100"
-                        }`}>
+                      <span
+                        className={`px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider border ${
+                          s.status === "Blocked"
+                            ? "bg-rose-50 text-rose-700 border-rose-100"
+                            : "bg-emerald-50 text-emerald-700 border-emerald-100"
+                        }`}
+                      >
                         {s.status || "Approved"}
                       </span>
                     </td>
@@ -782,9 +870,7 @@ function SupplierConfig({ pageName = "Procurement" }) {
                           <Edit className="w-4 h-4" />
                         </button>
                         <button
-                          onClick={() =>
-                            handleDelete(s._id, s.name)
-                          }
+                          onClick={() => handleDelete(s._id, s.name)}
                           className="p-2 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition-all"
                           title="Delete Supplier"
                         >
@@ -935,56 +1021,82 @@ function SupplierConfig({ pageName = "Procurement" }) {
                   <table className="w-full text-sm text-left">
                     <thead className="bg-slate-50/80 text-[10px] font-bold text-slate-400 uppercase tracking-widest border-b border-slate-200">
                       <tr>
-                        <th className="px-6 py-3">Internal Item</th>
-                        <th className="px-6 py-3">Supplier Alias</th>
-                        <th className="px-6 py-3">Contract Rate</th>
-                        <th className="px-6 py-3 text-right text-slate-700 bg-indigo-50/30">
-                          Action
-                        </th>
+                        <th className="px-6 py-4">Internal Item</th>
+                        <th className="px-6 py-4">Supplier Alias / HSN</th>
+                        <th className="px-6 py-4">Agreed Contract Rate</th>
+                        <th className="px-6 py-4 text-right">Actions</th>
                       </tr>
                     </thead>
-                    <tbody className="divide-y divide-slate-50">
+                    <tbody className="divide-y divide-slate-100">
                       {selectedSupplier.agreedProducts?.map((product, idx) => (
                         <tr
                           key={idx}
-                          className="hover:bg-slate-50 transition-colors"
+                          className="hover:bg-slate-50/50 transition-colors group"
                         >
                           <td className="px-6 py-4">
-                            <div className="font-bold text-slate-900">
-                              {product.configId?.itemCode}
-                            </div>
-                            <div className="text-[11px] text-slate-500 font-medium">
-                              {product.configId?.itemName}
+                            <div className="flex flex-col gap-1">
+                              <div className="flex items-center gap-2">
+                                <span className="font-mono font-bold text-slate-900 bg-slate-100 px-1.5 py-0.5 rounded text-[11px] border border-slate-200 uppercase">
+                                  {product.configId?.itemCode || "NO-CODE"}
+                                </span>
+                                {product.configId?.category && (
+                                  <span className="text-[9px] font-black uppercase tracking-tighter text-indigo-500 bg-indigo-50 px-1.5 py-0.5 rounded border border-indigo-100/50">
+                                    {product.configId.category}
+                                  </span>
+                                )}
+                              </div>
+                              <div
+                                className="text-xs font-semibold text-slate-600 truncate max-w-[200px]"
+                                title={product.configId?.itemName}
+                              >
+                                {product.configId?.itemName ||
+                                  "Loading name..."}
+                              </div>
                             </div>
                           </td>
                           <td className="px-6 py-4">
-                            <div className="text-xs font-semibold text-slate-700">
-                              {product.supplierItemName || "-"}
+                            <div className="text-xs font-bold text-slate-700">
+                              {product.supplierItemName || "—"}
                             </div>
-                            {product.hsnCode && (
-                              <div className="text-[10px] text-slate-400">
-                                HSN: {product.hsnCode}
-                              </div>
-                            )}
+                            <div className="flex items-center gap-1.5 mt-1">
+                              <span className="text-[10px] text-slate-400 font-medium">
+                                HSN:
+                              </span>
+                              <span className="text-[10px] font-mono text-slate-500">
+                                {product.hsnCode || "N/A"}
+                              </span>
+                            </div>
                           </td>
                           <td className="px-6 py-4">
-                            <div className="text-sm font-bold text-slate-900">
-                              {product.currency || "INR"}{" "}
-                              {product.agreedRate?.toLocaleString()}
-                            </div>
-                            {product.isPreferred && (
-                              <div className="text-[10px] font-bold text-emerald-600 flex items-center gap-0.5">
-                                <Check className="w-2.5 h-2.5" /> Preferred
+                            <div className="flex flex-col">
+                              <div className="flex items-center gap-1.5">
+                                <span className="text-[10px] font-bold text-slate-400">
+                                  {product.currency || "INR"}
+                                </span>
+                                <span className="text-base font-black text-slate-900 leading-none">
+                                  {product.agreedRate?.toLocaleString()}
+                                </span>
                               </div>
-                            )}
+                              {product.isPreferred && (
+                                <div className="mt-1 flex items-center gap-1">
+                                  <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></div>
+                                  <span className="text-[9px] font-black text-emerald-600 uppercase tracking-widest bg-emerald-50 px-1.5 py-0.5 rounded-full border border-emerald-100">
+                                    Primary Source
+                                  </span>
+                                </div>
+                              )}
+                            </div>
                           </td>
                           <td className="px-6 py-4 text-right">
-                            <div className="flex justify-end gap-2">
+                            <div className="flex justify-end items-center gap-1 opacity-40 group-hover:opacity-100 transition-opacity">
                               <button
                                 onClick={() => {
                                   const history =
                                     selectedSupplier.priceHistory?.filter(
-                                      (h) => h.configId === (product.configId?._id || product.configId),
+                                      (h) =>
+                                        h.configId ===
+                                        (product.configId?._id ||
+                                          product.configId),
                                     );
                                   setTrendItem({
                                     item: product.configId,
@@ -992,15 +1104,16 @@ function SupplierConfig({ pageName = "Procurement" }) {
                                   });
                                   setIsTrendModalOpen(true);
                                 }}
-                                className="p-2 text-indigo-600 hover:bg-indigo-50 rounded-lg transition-colors border border-transparent hover:border-indigo-100"
-                                title="Price Trend Analysis"
+                                className="p-2 text-indigo-600 hover:bg-indigo-50 rounded-xl transition-all"
+                                title="Price Trends"
                               >
                                 <TrendingUp className="w-4 h-4" />
                               </button>
                               <button
                                 onClick={() => {
                                   setRateForm({
-                                    configId: product.configId?._id || product.configId,
+                                    configId:
+                                      product.configId?._id || product.configId,
                                     configModel: product.configModel,
                                     itemName: product.configId?.itemName,
                                     itemCode: product.configId?.itemCode,
@@ -1018,16 +1131,19 @@ function SupplierConfig({ pageName = "Procurement" }) {
                                   });
                                   setIsMapItemModalOpen(true);
                                 }}
-                                className="p-2 text-slate-400 hover:text-slate-900 hover:bg-slate-100 rounded-lg transition-colors"
+                                className="p-2 text-slate-600 hover:bg-slate-100 rounded-xl transition-all"
+                                title="Edit Mapping"
                               >
                                 <Edit className="w-4 h-4" />
                               </button>
                               <button
                                 onClick={() =>
-                                  handleDeleteRate(product.configId?._id || product.configId)
+                                  handleDeleteRate(
+                                    product.configId?._id || product.configId,
+                                  )
                                 }
-                                className="p-2 text-rose-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition-colors"
-                                title="Remove Mapping"
+                                className="p-2 text-rose-500 hover:bg-rose-50 rounded-xl transition-all"
+                                title="Delete Mapping"
                               >
                                 <Trash2 className="w-4 h-4" />
                               </button>
@@ -1037,11 +1153,16 @@ function SupplierConfig({ pageName = "Procurement" }) {
                       ))}
                       {selectedSupplier.agreedProducts?.length === 0 && (
                         <tr>
-                          <td
-                            colSpan="5"
-                            className="px-6 py-20 text-center text-slate-400 italic"
-                          >
-                            No items mapped to this supplier yet.
+                          <td colSpan="4" className="px-6 py-20 text-center">
+                            <div className="flex flex-col items-center opacity-30">
+                              <Database className="w-10 h-10 mb-2" />
+                              <p className="text-sm font-bold uppercase tracking-widest">
+                                No Contractual Mappings
+                              </p>
+                              <p className="text-xs">
+                                Click "Map New Item" to initialize vendor rates
+                              </p>
+                            </div>
                           </td>
                         </tr>
                       )}
@@ -1090,12 +1211,22 @@ function SupplierConfig({ pageName = "Procurement" }) {
                     </label>
                     <select
                       value={rateForm.category}
-                      onChange={(e) => setRateForm({ ...rateForm, category: e.target.value, itemId: "", searchQuery: "", showDropdown: true })}
+                      onChange={(e) =>
+                        setRateForm({
+                          ...rateForm,
+                          category: e.target.value,
+                          configId: "",
+                          searchQuery: "",
+                          showDropdown: true,
+                        })
+                      }
                       className="block w-full rounded-xl border border-slate-200 py-2.5 px-4 text-sm outline-none focus:ring-2 focus:ring-indigo-600 transition-all bg-white"
                     >
                       <option value="">All Categories</option>
-                      {availableCategories.map(cat => (
-                        <option key={cat} value={cat.toLowerCase()}>{cat}</option>
+                      {availableCategories.map((cat) => (
+                        <option key={cat} value={cat.toLowerCase()}>
+                          {cat}
+                        </option>
                       ))}
                     </select>
                   </div>
@@ -1120,10 +1251,11 @@ function SupplierConfig({ pageName = "Procurement" }) {
                         onFocus={() =>
                           setRateForm({ ...rateForm, showDropdown: true })
                         }
-                        className={`block w-full rounded-xl border py-2.5 pl-10 pr-4 text-sm outline-none transition-all ${rateForm.itemId
-                          ? "bg-emerald-50 border-emerald-200 text-emerald-900"
-                          : "bg-white border-slate-200"
-                          }`}
+                        className={`block w-full rounded-xl border py-2.5 pl-10 pr-4 text-sm outline-none transition-all ${
+                          rateForm.configId
+                            ? "bg-emerald-50 border-emerald-200 text-emerald-900"
+                            : "bg-white border-slate-200"
+                        }`}
                       />
                       {rateForm.showDropdown && (
                         <div
@@ -1140,7 +1272,7 @@ function SupplierConfig({ pageName = "Procurement" }) {
                             (itemsList || []).map((item) => (
                               <div
                                 key={item._id}
-                                onClick={() =>
+                                onClick={() => {
                                   setRateForm({
                                     ...rateForm,
                                     configId: item._id,
@@ -1150,8 +1282,9 @@ function SupplierConfig({ pageName = "Procurement" }) {
                                     hsnCode: item.hsnCode || "",
                                     searchQuery: `${item.itemCode} - ${item.itemName}`,
                                     showDropdown: false,
-                                  })
-                                }
+                                  });
+                                  fetchStockValuation(item._id);
+                                }}
                                 className="px-4 py-2.5 hover:bg-indigo-50 cursor-pointer border-b border-slate-50 last:border-0"
                               >
                                 <div className="font-bold text-slate-900">
@@ -1276,7 +1409,7 @@ function SupplierConfig({ pageName = "Procurement" }) {
                   </button>
                   <button
                     onClick={handleMapItem}
-                    disabled={!rateForm.itemId || !rateForm.agreedRate}
+                    disabled={!rateForm.configId || !rateForm.agreedRate}
                     className="px-6 py-2 text-sm font-bold text-white bg-indigo-600 hover:bg-indigo-700 rounded-xl shadow-md disabled:opacity-50 disabled:grayscale transition-all active:scale-95"
                   >
                     Confirm Mapping
