@@ -107,11 +107,11 @@ export default function DashboardPage() {
       }
       try {
         const res = await fetch(
-          `/api/production/items?category=${filters.category}`,
+          `/api/dashboard/trend/options?category=${filters.category}`,
         );
         const json = await res.json();
         if (json.success) {
-          setItems(json.data || []);
+          setItems(json.options || []);
         }
       } catch (e) {
         console.error("Error fetching items for filter:", e);
@@ -267,7 +267,6 @@ export default function DashboardPage() {
                       <option value="All">All Categories</option>
                       <option value="Component">Components</option>
                       <option value="Spare_Part">Spares</option>
-                      <option value="Consumable">Consumables</option>
                       <option value="Product">Finished Products</option>
                     </select>
                   </div>
@@ -285,8 +284,8 @@ export default function DashboardPage() {
                     >
                       <option value="">All Items</option>
                       {items.map((item) => (
-                        <option key={item._id} value={item._id}>
-                          {item.itemName}
+                        <option key={item.value} value={item.value}>
+                          {item.label}
                         </option>
                       ))}
                     </select>

@@ -1,295 +1,37 @@
-<!DOCTYPE html>
-<html>
-<head>
-  <style>
-    body { font-family: 'Helvetica', sans-serif; font-size: 10pt; color: #000; padding: 0px 20px; }
-    table { border-collapse: collapse; }
-    
-    /* Header */
-    .header-title { 
-      font-family: 'Bell MT', serif; 
-      font-size: 14pt; 
-      font-weight: bold; 
-      margin-bottom: 5px; 
-      color: #F25700;
-      white-space: nowrap; 
-      line-height: 1.2;
-    }
-    
-    .header-subtitle { 
-      font-size: 10pt; 
-      font-weight: bold; 
-      text-align: center; 
-      margin-bottom: 10px; 
-      text-decoration: underline; 
-      color: #0000FF; /* Blue */
-    }
-    
-    /* Header Table */
-    .header-table { width: 100%; margin-bottom: 10px; border: none; border-spacing: 0; }
-    .header-table td { border: none; vertical-align: middle; padding: 0; padding-top: 5px; }
-    .header-left { text-align: left; width: 65%; } 
-    .header-right { text-align: right; width: 35%; }
-    .logo-box { display: inline-block; white-space: nowrap; } 
-    .logo-img { height: 50px; width: auto; vertical-align: top; margin-left: 10px; } 
-    
-    /* Layout Table */
-    .layout-table { 
-      width: 100%; 
-      margin-top: 10px; 
-      margin-bottom: 5px; 
-      border-collapse: collapse; 
-      border: 1px solid #888; 
-    }
-    
-    .vendor-cell { 
-      width: 50%; 
-      border: 1px solid #888; 
-      height: 80px; 
-      vertical-align: top;
-    }
-    
-    .po-cell { 
-      width: 50%; 
-      border: 1px solid #888; 
-      height: 80px; 
-      vertical-align: top;
-    }
-    
-    .vendor-box { padding: 10px; }
-    .po-details-box { padding: 10px; }
-    
-    .po-details-table { width: 100%; }
-    .po-details-table td { padding: 2px 0; font-size: 9pt; border: none; }
-    .po-label { font-weight: bold; width: 100px; }
-    
-    /* Items Table */
-    .items-table { margin-top: 5px; width: 100%; border: 1px solid #888; border-collapse: collapse; }
-    
-    /* Updated Header Styling for multi-line */
-    .items-table th { 
-      border: 1px solid #888; 
-      padding: 5px; 
-      background-color: #eee; 
-      font-size: 9pt; 
-      font-weight: bold; 
-      text-align: center; 
-      vertical-align: bottom; /* Aligns text to bottom if heights vary */
-    }
-    
-    .items-table td { border: 1px solid #888; padding: 2px; font-size: 9pt; }
-    .text-right { text-align: right; }
-    .text-center { text-align: center; }
-    
-    /* Terms Table */
-    .terms-table { width: 100%; margin-top: 5px; border: 1px solid #888; border-collapse: collapse; }
-    .terms-table td { padding: 3px 5px; vertical-align: top; font-size: 9pt; border: none; }
-    .term-key { width: 100px; font-weight: bold; white-space: nowrap; }
-    
-    /* Signatures */
-    .signatures { margin-top: 10px; width: 100%; border: none; }
-    .signatures td { border: none; vertical-align: top; text-align: center; font-weight: bold; font-size: 9pt; }
-    
-    /* GST Box */
-    .gst-table { width: 100%; margin-top: 10px; border: 1px solid #888; border-collapse: collapse; }
-    .gst-table td { text-align: center; font-weight: bold; padding: 5px; font-size: 9pt; background-color: #fff; }
+Key Recommendations for TPM Optimization
 
-    /* Address Box */
-    .address-table { width: 100%; margin-top: 5px; border: 1px solid #888; border-collapse: collapse; }
-    .address-table td { text-align: center; padding: 5px; font-size: 8pt; }
-    
-    /* Split Address Rows */
-    .split-address-row { border-bottom: 1px solid #888; }
-    
-    /* Indent Box */
-    .indent-table { width: 100%; margin-top: 5px; border: 1px solid #888; border-collapse: collapse; }
-    .indent-table td { width: 33%; font-size: 8pt; vertical-align: middle; padding: 5px; text-align: left; border-right: 1px solid #888; }
-    .indent-table td:last-child { border-right: none; }
-    
-    .red-underline { color: red; text-decoration: underline; font-weight: bold; }
-  </style>
-</head>
-<body>
+1. Database: Zero-Latency Lookups
 
-  <!-- HEADER TABLE -->
-  <table class="header-table">
-    <tr>
-      <td class="header-left">
-        <div class="header-title">TECHSER POWER SOLUTIONS PRIVATE LIMITED</div>
-      </td>
-      <td class="header-right">
-        <div class="logo-box">
-          <? if (logo1Url) { ?>
-            <img src="<?!= logo1Url ?>" class="logo-img" alt="Logo 1">
-          <? } ?>
-          <? if (logo2Url) { ?>
-            <img src="<?!= logo2Url ?>" class="logo-img" alt="Logo 2">
-          <? } ?>
-        </div>
-      </td>
-    </tr>
-  </table>
-  
-  <div class="header-subtitle">PURCHASE ORDER</div>
+Factory floors rely on instant scans. As your data grows, standard queries will slow down.
 
-  <!-- LAYOUT TABLE -->
-  <table class="layout-table">
-    <tr>
-      <!-- Vendor Cell -->
-      <td class="vendor-cell">
-        <div class="vendor-box">
-          <?!= vendor.address ?>
-        </div>
-      </td>
-      <!-- PO Cell -->
-      <td class="po-cell">
-        <div class="po-details-box">
-          <table class="po-details-table">
-            <tr><td class="po-label">PO No.</td><td>: <?= po.number ?></td></tr>
-            <tr><td class="po-label">Date</td><td>: <?= po.date ?></td></tr>
-            <tr><td class="po-label">Your Qtn Ref</td><td>: <?= po.ref ?>, dated <?= po.qtnDate ?></td></tr>
-            <tr><td class="po-label">Person Resp.</td><td>: <b><?= po.contact ?></b></td></tr>
-          </table>
-        </div>
-      </td>
-    </tr>
-  </table>
+Implement Compound Indexing: Always index fields frequently used for filtering together (e.g., factory + createdAt). This prevents MongoDB from scanning every record in the collection.
 
-  <div style="margin-top: 0px; font-size: 9pt;">
-    With ref. to your quotation, please supply the following items, subject to conditions mentioned hereunder.
-  </div>
+Lean Queries: Use .lean() in all Mongoose GET requests. This skips the creation of complex Mongoose objects and returns plain JSON, reducing server memory usage by ~30%.
 
-  <!-- ITEMS TABLE (Headers Updated) -->
-  <table class="items-table">
-    <thead>
-      <tr>
-        <th style="width: 30px; white-space: nowrap;">S.No</th>
-        <th>Material Description</th>
-        <th style="width: 80px;">Make</th>
-        <!-- UPDATED HEADERS -->
-        <th style="width: 50px;">QTY<br>[Nos]</th>
-        <th style="width: 70px;">RATE<br>[per Unit]</th>
-        <th style="width: 50px;">GST<br>[%]</th>
-        <th style="width: 80px;">TOTAL<br>AMOUNT</th>
-      </tr>
-    </thead>
-    <tbody>
-      <? for (var i = 0; i < items.length; i++) { ?>
-      <tr>
-        <td class="text-center"><?= i + 1 ?></td>
-        <td><?= items[i].name ?> <?= items[i].description ?> </td>
-        <td class="text-center"><?= items[i].make ?></td>
-        <td class="text-center"><?= items[i].qty ?></td>
-        <td class="text-right"><?= items[i].rate ?></td>
-        <td class="text-center"><?= items[i].gst ?>%</td>
-        <td class="text-right"><?= items[i].total ?></td>
-      </tr>
-      <? } ?>
-      
-      <tr>
-        <td colspan="6" class="text-right"><strong>Total Base Amount</strong></td>
-        <td class="text-right"><?= totals.base ?></td>
-      </tr>
-      <tr>
-        <td colspan="6" class="text-right"><strong>Total GST</strong></td>
-        <td class="text-right"><?= totals.gst ?></td>
-      </tr>
-      <tr>
-        <td colspan="6" class="text-right"><strong>Grand Total</strong></td>
-        <td class="text-right"><strong><?= totals.grand ?></strong></td>
-      </tr>
-    </tbody>
-  </table>
+Data Projection: Only fetch the fields you actually need. Instead of find(), use find().select('name sku quantity').
 
-  <? if (note && note.trim() !== "") { ?>
-  <div style="color: red; padding:5px;"><strong>NOTE:</strong> <?= note ?></div>
-  <? } ?>
+2. API: Payload & Traffic Control
 
-  <!-- TERMS TABLE -->
-  <table class="terms-table">
-    <tr>
-      <td class="term-key">Price Basis</td>
-      <td class="term-val">: <?= terms.priceBasis ?></td>
-    </tr>
-    <tr>
-      <td class="term-key">Payment Terms</td>
-      <td class="term-val">: <?= terms.paymentTerms ?></td>
-    </tr>
-    <tr>
-      <td class="term-key">Tax</td>
-      <td class="term-val">: <?= terms.tax ?></td>
-    </tr>
-    <tr>
-      <td class="term-key">Delivery</td>
-      <td class="term-val">: <b><?= terms.delivery ?></b></td>
-    </tr>
-    <tr>
-      <td class="term-key">Packing Material</td>
-      <td class="term-val">: <b><?= terms.packingMaterial ?></b></td>
-    </tr>
-    <tr>
-      <td class="term-key">Jurisdiction</td>
-      <td class="term-val"><b>: <?= terms.jurisdiction ?></b></td>
-    </tr>
-    <tr>
-      <td class="term-key">Inspection</td>
-      <td class="term-val">: <?= terms.inspection ?></td>
-    </tr>
-  </table>
+Large data sets should never be sent to the client in a single request.
 
-  <!-- SIGNATURES -->
-  <table class="signatures">
-    <tr>
-      <td style="text-align: left; width: 50%;">
-       
-      </td>
-      <td style="text-align: right; width: 50%;">
-        For TECHSER POWER SOLUTIONS PVT LTD<br><br><br><br>
-        Authorized Signatory
-      </td>
-    </tr>
-  </table>
+Server-Side Pagination: Implement mandatory page and limit parameters for high-volume endpoints like Transactions and Assembly Logs.
 
-  <!-- GST BOX -->
-  <table class="gst-table">
-    <tr>
-      <td>GST REGISTRATION NUMBER: <?= company.gstNumber ?></td>
-    </tr>
-  </table>
+Parallel Fetching: Use Promise.all() to fetch data and metadata (like total counts) simultaneously to reduce response wait times.
 
-  <!-- ADDRESS BOX -->
-  <table class="address-table">
-    <? if (company.billingAddress === company.deliveryAddress) { ?>
-       <tr>
-          <td>
-            <strong class="red-underline">BILLING & DELIVERY ADDRESS</strong><br>
-            <b><?!= company.billingAddress ?></b>
-          </td>
-       </tr>
-    <? } else { ?>
-       <tr class="split-address-row">
-          <td>
-             <strong class="red-underline">BILLING ADDRESS</strong><br>
-             <b><?!= company.billingAddress ?></b>
-          </td>
-       </tr>
-       <tr>
-          <td>
-             <strong class="red-underline">DELIVERY ADDRESS</strong><br>
-             <b><?!= company.deliveryAddress ?></b>
-          </td>
-       </tr>
-    <? } ?>
-  </table>
+3. Frontend: "Light" UI Experience
 
-  <!-- INDENT BOX -->
-  <table class="indent-table">
-    <tr>
-      <td style="text-align: left;"><strong>Stores Indent #:</strong> <?= terms.storesIndent ?></td>
-      <td style="text-align: left;"><strong>Indent Date:</strong> <?= terms.indentDate ?></td>
-      <td style="text-align: left;"><strong>GIR # with date:</strong> <?= terms.girWithDate ?></td>
-    </tr>
-  </table>
+A browser can struggle to render thousands of table rows, causing lag.
 
-</body>
-</html>
+List Virtualization: For tables with hundreds of entries (e.g., Inventory Logs), use "Virtual Lists." This ensures only the rows currently visible on the screen are rendered in the DOM.
+
+Optimistic Updates: Use a state management library like TanStack Query to show "success" immediately when a worker logs an entry, syncing with the database in the background.
+
+Debounced Inputs: Optimize barcode scanner inputs so the application doesn't try to validate or search for every single character typed in rapid succession.
+
+4. Heavy Processing: Offloading
+
+Don't let complex calculations freeze your user interface.
+
+Database Aggregations: Move heavy calculations (like Aging Reports or Costing) from JavaScript to MongoDB's Aggregation Framework ($group, $sum, $match).
+
+Background Jobs: For tasks like PDF generation or bulk data imports, use background processing so the user can continue working while the task runs.

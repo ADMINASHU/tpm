@@ -42,16 +42,30 @@ export async function GET(req) {
       date: { $gte: startDate, $lte: endDate },
     };
 
-    // Filter by item if provided
-    if (itemId) {
-      match.item = new mongoose.Types.ObjectId(itemId);
-    } else if (category && category !== "All") {
-      // If category filter but no specific item, we need to find items in that category first
-      const itemsInCategory = await Item.find({ factoryId: fId, category })
-        .select("_id")
-        .lean();
-      const itemIds = itemsInCategory.map((i) => i._id);
-      match.item = { $in: itemIds };
+    if (category === "Product") {
+      match.configModel = "ProductConfig";
+      if (itemId) {
+        match.configId = new mongoose.Types.ObjectId(itemId);
+      }
+    } else if (category === "Spare_Part") {
+      match.configModel = "SpareConfig";
+      if (itemId) {
+        match.configId = new mongoose.Types.ObjectId(itemId);
+      }
+    } else if (category === "Component") {
+      match.configModel = "ComponentConfig";
+      if (itemId) {
+        // itemId here is the component category from SystemConfig
+        const itemsInCategory = await Item.find({
+          factoryId: fId,
+          category: itemId,
+        })
+          .select("_id")
+          .lean();
+        const itemIds = itemsInCategory.map((i) => i._id);
+        match.item = { $in: itemIds };
+        delete match.configModel;
+      }
     }
 
     const trendData = await InventoryTransaction.aggregate([
