@@ -50,14 +50,14 @@ function StockOverview({ pageName = "Inventory" }) {
     if (!groupByMake) return [];
 
     const groups = {};
-    filteredItems.forEach(item => {
+    filteredItems.forEach((item) => {
       const make = item.make || item.productRatings || "General";
       if (!groups[make]) {
         groups[make] = {
           make,
           totalQuantity: 0,
           totalValue: 0,
-          items: []
+          items: [],
         };
       }
 
@@ -65,7 +65,7 @@ function StockOverview({ pageName = "Inventory" }) {
       const price = Number(item.averageUnitCost || 0);
 
       groups[make].totalQuantity += qty;
-      groups[make].totalValue += (qty * price);
+      groups[make].totalValue += qty * price;
       groups[make].items.push(item);
     });
 
@@ -99,9 +99,9 @@ function StockOverview({ pageName = "Inventory" }) {
         <div className="flex flex-col sm:flex-row items-center gap-4 w-full sm:w-auto">
           <button
             onClick={() => setGroupByMake(!groupByMake)}
-            className={`px-4 py-2 text-sm font-bold rounded-xl transition-colors border ${groupByMake ? 'bg-indigo-50 text-indigo-700 border-indigo-200' : 'bg-white text-slate-600 border-slate-200 hover:bg-slate-50'}`}
+            className={`px-4 py-2 text-sm font-bold rounded-xl transition-colors border ${groupByMake ? "bg-indigo-50 text-indigo-700 border-indigo-200" : "bg-white text-slate-600 border-slate-200 hover:bg-slate-50"}`}
           >
-            Condition: {groupByMake ? 'Grouped by Make' : 'Individual SKUs'}
+            Condition: {groupByMake ? "Grouped by Make" : "Individual SKUs"}
           </button>
           <div className="relative w-full sm:w-80">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
@@ -120,9 +120,15 @@ function StockOverview({ pageName = "Inventory" }) {
         <table className="w-full text-left text-sm border-collapse">
           <thead>
             <tr className="bg-slate-50/50 text-slate-400 uppercase tracking-widest text-[10px] font-bold">
-              <th className="py-4 px-6">{groupByMake ? 'Make Strategy' : 'Identity'}</th>
-              <th className="py-4 px-6">{groupByMake ? 'Unique SKUs' : 'Category & Make'}</th>
-              {!groupByMake && <th className="py-4 px-6 text-right">Avg Unit Cost</th>}
+              <th className="py-4 px-6">
+                {groupByMake ? "Make Strategy" : "Identity"}
+              </th>
+              <th className="py-4 px-6">
+                {groupByMake ? "Unique SKUs" : "Category & Make"}
+              </th>
+              {!groupByMake && (
+                <th className="py-4 px-6 text-right">Avg Unit Cost</th>
+              )}
               <th className="py-4 px-6 text-right">Qty Available</th>
               <th className="py-4 px-6 text-right">Est. Total Value</th>
             </tr>
@@ -150,22 +156,35 @@ function StockOverview({ pageName = "Inventory" }) {
               </tr>
             ) : groupByMake ? (
               groupedItems.map((group) => (
-                <tr key={group.make} className="hover:bg-slate-50/80 transition-colors group">
+                <tr
+                  key={group.make}
+                  className="hover:bg-slate-50/80 transition-colors group"
+                >
                   <td className="py-4 px-6">
-                    <span className="font-bold text-slate-900 text-sm uppercase tracking-wider">{group.make}</span>
+                    <span className="font-bold text-slate-900 text-sm uppercase tracking-wider">
+                      {group.make}
+                    </span>
                   </td>
                   <td className="py-4 px-6">
-                    <span className="text-xs font-bold text-slate-500 bg-slate-100 px-2 py-1 rounded-lg border border-slate-200">{group.items.length} SKUs</span>
+                    <span className="text-xs font-bold text-slate-500 bg-slate-100 px-2 py-1 rounded-lg border border-slate-200">
+                      {group.items.length} SKUs
+                    </span>
                   </td>
                   <td className="py-4 px-6 text-right">
                     <span className="text-base font-black text-indigo-600">
                       {Number(group.totalQuantity).toLocaleString()}
-                      <span className="text-[10px] ml-1 font-bold text-slate-400 uppercase tracking-tighter">Units</span>
+                      <span className="text-[10px] ml-1 font-bold text-slate-400 uppercase tracking-tighter">
+                        Units
+                      </span>
                     </span>
                   </td>
                   <td className="py-4 px-6 text-right">
                     <span className="text-sm font-bold text-slate-700">
-                      ₹{Number(group.totalValue).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                      ₹
+                      {Number(group.totalValue).toLocaleString(undefined, {
+                        minimumFractionDigits: 2,
+                        maximumFractionDigits: 2,
+                      })}
                     </span>
                   </td>
                 </tr>
@@ -179,7 +198,14 @@ function StockOverview({ pageName = "Inventory" }) {
                 return (
                   <tr
                     key={item._id}
-                    className="hover:bg-slate-50/80 transition-colors group"
+                    className={`transition-colors group ${
+                      qty < (item.minStockLevel || 0)
+                        ? "bg-rose-50/50 hover:bg-rose-100/50"
+                        : qty > (item.maxStockLevel || 0) &&
+                            item.maxStockLevel > 0
+                          ? "bg-emerald-50/50 hover:bg-emerald-100/50"
+                          : "hover:bg-slate-50/80"
+                    }`}
                   >
                     <td className="py-4 px-6">
                       <div className="flex flex-col">
@@ -194,8 +220,10 @@ function StockOverview({ pageName = "Inventory" }) {
                     <td className="py-4 px-6">
                       <div className="flex flex-col">
                         <span className="text-xs font-bold text-slate-600 flex items-center gap-2">
-                          {item.category?.replace('_', ' ')}
-                          <span className={`px-1.5 py-0.5 rounded text-[8px] font-bold uppercase ${item.type === 'product' ? 'bg-purple-100 text-purple-700' : 'bg-blue-100 text-blue-700'}`}>
+                          {item.category?.replace("_", " ")}
+                          <span
+                            className={`px-1.5 py-0.5 rounded text-[8px] font-bold uppercase ${item.type === "product" ? "bg-purple-100 text-purple-700" : "bg-blue-100 text-blue-700"}`}
+                          >
                             {item.type}
                           </span>
                         </span>
@@ -206,15 +234,18 @@ function StockOverview({ pageName = "Inventory" }) {
                     </td>
                     <td className="py-4 px-6 text-right">
                       <span className="text-xs font-bold text-slate-500">
-                        ₹{price.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                        ₹
+                        {price.toLocaleString(undefined, {
+                          minimumFractionDigits: 2,
+                          maximumFractionDigits: 2,
+                        })}
                       </span>
                     </td>
                     <td className="py-4 px-6 text-right">
                       <span
-                        className={`text-base font-black ${qty <= 0
-                          ? "text-rose-600"
-                          : "text-emerald-600"
-                          }`}
+                        className={`text-base font-black ${
+                          qty <= 0 ? "text-rose-600" : "text-emerald-600"
+                        }`}
                       >
                         {qty.toLocaleString()}
                         <span className="text-[10px] ml-1 font-bold text-slate-400 uppercase tracking-tighter">
@@ -224,11 +255,15 @@ function StockOverview({ pageName = "Inventory" }) {
                     </td>
                     <td className="py-4 px-6 text-right">
                       <span className="text-xs font-bold text-slate-800">
-                        ₹{totalValue.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                        ₹
+                        {totalValue.toLocaleString(undefined, {
+                          minimumFractionDigits: 2,
+                          maximumFractionDigits: 2,
+                        })}
                       </span>
                     </td>
                   </tr>
-                )
+                );
               })
             )}
           </tbody>

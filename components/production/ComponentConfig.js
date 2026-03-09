@@ -35,8 +35,8 @@ function ComponentConfig({ pageName = "Production" }) {
     make: true,
     category: true,
     trackingType: true,
-    baseUom: true,
-    hsnCode: false,
+    baseUom: false,
+    hsnCode: true,
     mountingTechnology: false,
     bufferLevels: true,
     techSpecs: false,
@@ -50,7 +50,9 @@ function ComponentConfig({ pageName = "Production" }) {
     const savedColumns = localStorage.getItem("componentConfig_visibleColumns");
     if (savedColumns) {
       try {
-        setVisibleColumns(JSON.parse(savedColumns));
+        const parsed = JSON.parse(savedColumns);
+        // Merge with defaults to ensure new columns are handled
+        setVisibleColumns((prev) => ({ ...prev, ...parsed }));
       } catch (e) {
         console.error("Failed to parse saved columns", e);
       }
@@ -63,7 +65,12 @@ function ComponentConfig({ pageName = "Production" }) {
   }, []);
 
   // Save to Local Storage on Change
+  const isFirstRender = useRef(true);
   useEffect(() => {
+    if (isFirstRender.current) {
+      isFirstRender.current = false;
+      return;
+    }
     localStorage.setItem(
       "componentConfig_visibleColumns",
       JSON.stringify(visibleColumns),
@@ -337,11 +344,16 @@ function ComponentConfig({ pageName = "Production" }) {
 
     setIsSaving(true);
     try {
-      const res = await fetch(isEditing ? `/api/production/config/components?id=${editingId}` : "/api/production/config/components", {
-        method: isEditing ? "PUT" : "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload),
-      });
+      const res = await fetch(
+        isEditing
+          ? `/api/production/config/components?id=${editingId}`
+          : "/api/production/config/components",
+        {
+          method: isEditing ? "PUT" : "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload),
+        },
+      );
       const json = await res.json();
       if (json.success) {
         setShowForm(false);
@@ -366,8 +378,8 @@ function ComponentConfig({ pageName = "Production" }) {
       } else {
         setSaveError(
           json.results?.errors?.[0]?.error ||
-          json.error ||
-          "Save failed. Please try again.",
+            json.error ||
+            "Save failed. Please try again.",
         );
       }
     } catch {
@@ -547,7 +559,7 @@ function ComponentConfig({ pageName = "Production" }) {
     }
     setIsUploading(true);
     try {
-      const res = await fetch("/api/production/items", {
+      const res = await fetch("/api/production/config/components", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(validRows),
@@ -559,8 +571,8 @@ function ComponentConfig({ pageName = "Production" }) {
       } else {
         setCsvError(
           json.results?.errors?.[0]?.error ||
-          json.error ||
-          "Upload failed. Please try again.",
+            json.error ||
+            "Upload failed. Please try again.",
         );
       }
     } catch (error) {
