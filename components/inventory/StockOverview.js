@@ -118,6 +118,37 @@ function StockOverview({ pageName = "Inventory" }) {
         </div>
       </div>
 
+      {message.text && (
+        <div
+          className={`px-6 py-3 rounded-xl flex items-center justify-between animate-in slide-in-from-top duration-300 border ${
+            message.type === "success"
+              ? "bg-emerald-50 text-emerald-800 border-emerald-100 shadow-sm"
+              : "bg-rose-50 text-rose-800 border-rose-100 shadow-sm"
+          }`}
+        >
+          <div className="flex items-center gap-3">
+            <div
+              className={`p-1.5 rounded-lg ${message.type === "success" ? "bg-emerald-100" : "bg-rose-100"}`}
+            >
+              {message.type === "success" ? (
+                <CheckCircle2 className="w-4 h-4 text-emerald-600" />
+              ) : (
+                <AlertCircle className="w-4 h-4 text-rose-600" />
+              )}
+            </div>
+            <span className="text-xs font-black uppercase tracking-widest">
+              {message.text}
+            </span>
+          </div>
+          <button
+            onClick={() => setMessage({ type: "", text: "" })}
+            className="p-1 text-slate-400 hover:text-slate-600 hover:bg-white/50 rounded-lg transition-colors"
+          >
+            <X className="w-3.5 h-3.5" />
+          </button>
+        </div>
+      )}
+
       <div className="bg-white border border-slate-100 rounded-2xl shadow-sm overflow-hidden">
         <table className="w-full text-left text-sm border-collapse">
           <thead>

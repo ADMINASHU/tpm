@@ -57,6 +57,11 @@ const navItems = [
         icon: FileCheck,
       },
       {
+        name: "Purchase Orders",
+        href: "/procurement?tab=orders",
+        icon: PackageSearch,
+      },
+      {
         name: "Supplier Config",
         href: "/procurement?tab=suppliers",
         icon: Factory,

@@ -13,14 +13,17 @@ export async function DELETE(req, { params }) {
     if (!session)
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
-    const { id } = params;
+    const { id } = await params;
     await dbConnect();
 
-    const indent = await Indent.findOneAndDelete({
-      _id: id,
-      factoryId: session.user.factoryId,
-      status: "Approval Pending", // Only allow deleting pending indents
-    });
+    const query = { _id: id, factoryId: session.user.factoryId };
+
+    // Admins can delete any indent. Non-admins can only delete pending ones.
+    if (session.user.role !== "Admin") {
+      query.status = "Approval Pending";
+    }
+
+    const indent = await Indent.findOneAndDelete(query);
 
     if (!indent) {
       return NextResponse.json(
@@ -44,7 +47,7 @@ export async function PATCH(req, { params }) {
     if (!session)
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
-    const { id } = params;
+    const { id } = await params;
     const body = await req.json();
     await dbConnect();
 

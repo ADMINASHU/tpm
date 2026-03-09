@@ -491,16 +491,22 @@ function IndentCreation({ pageName = "Procurement" }) {
       ) : (
         /* DETAIL VIEW SECTION */
         <div className="bg-white rounded-xl border border-slate-100 shadow-xl overflow-hidden animate-in zoom-in duration-300">
-          <div className="px-8 py-5 bg-slate-900 text-white flex justify-between items-center">
+          <div
+            className="px-8 py-5 border-b border-indigo-100 flex justify-between items-center"
+            style={{
+              background:
+                "linear-gradient(to right, #f5f7ff, #ffffff, #f5f7ff)",
+            }}
+          >
             <div className="flex items-center gap-4">
               <button
                 onClick={() => setViewMode("list")}
-                className="p-2 hover:bg-white/10 rounded-xl transition-colors"
+                className="p-2 hover:bg-indigo-100 rounded-xl transition-colors text-indigo-600"
               >
                 <ArrowRight className="w-5 h-5 rotate-180" />
               </button>
               <div>
-                <h3 className="text-xl font-black">
+                <h3 className="text-xl font-black text-slate-900">
                   {selectedIndent.indentNumber}
                 </h3>
                 <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">
@@ -517,13 +523,13 @@ function IndentCreation({ pageName = "Procurement" }) {
                       setIsEditing(true);
                       setEditForm({ ...selectedIndent });
                     }}
-                    className="px-5 py-2 bg-white/10 text-white rounded-xl font-bold text-[11px] uppercase hover:bg-white/20 transition-all flex items-center gap-2"
+                    className="px-5 py-2 bg-slate-100 text-slate-700 rounded-xl font-bold text-[11px] uppercase hover:bg-slate-200 transition-all flex items-center gap-2"
                   >
                     Edit
                   </button>
                   <button
                     onClick={() => deleteIndent(selectedIndent._id)}
-                    className="px-5 py-2 bg-rose-500/10 text-rose-500 rounded-xl font-bold text-[11px] uppercase hover:bg-rose-500 hover:text-white transition-all"
+                    className="px-5 py-2 bg-rose-50 text-rose-600 border border-rose-200 rounded-xl font-bold text-[11px] uppercase hover:bg-rose-500 hover:text-white hover:border-rose-500 transition-all"
                   >
                     Reject
                   </button>
@@ -531,7 +537,7 @@ function IndentCreation({ pageName = "Procurement" }) {
                     <button
                       onClick={() => approveIndent(selectedIndent._id)}
                       disabled={submitting}
-                      className="px-6 py-2 bg-emerald-500 text-white rounded-xl font-bold text-[11px] uppercase shadow-lg hover:bg-emerald-600 transition-all flex items-center gap-2"
+                      className="px-6 py-2 bg-emerald-500 text-white rounded-xl font-bold text-[11px] uppercase shadow hover:bg-emerald-600 transition-all flex items-center gap-2"
                     >
                       {submitting ? (
                         <Loader2 className="w-4 h-4 animate-spin" />
@@ -546,7 +552,7 @@ function IndentCreation({ pageName = "Procurement" }) {
                 <>
                   <button
                     onClick={() => setIsEditing(false)}
-                    className="px-5 py-2 bg-slate-700 text-white rounded-xl font-bold text-[11px] uppercase hover:bg-slate-600 transition-all flex items-center gap-2"
+                    className="px-5 py-2 bg-slate-100 text-slate-600 rounded-xl font-bold text-[11px] uppercase hover:bg-slate-200 transition-all flex items-center gap-2"
                   >
                     <RotateCcw className="w-4 h-4" />
                     Cancel
@@ -554,7 +560,7 @@ function IndentCreation({ pageName = "Procurement" }) {
                   <button
                     onClick={updateIndent}
                     disabled={submitting}
-                    className="px-6 py-2 bg-indigo-500 text-white rounded-xl font-bold text-[11px] uppercase shadow-lg hover:bg-indigo-600 transition-all flex items-center gap-2"
+                    className="px-6 py-2 bg-indigo-600 text-white rounded-xl font-bold text-[11px] uppercase shadow hover:bg-indigo-700 transition-all flex items-center gap-2"
                   >
                     <Save className="w-4 h-4" />
                     Save Changes
@@ -571,38 +577,55 @@ function IndentCreation({ pageName = "Procurement" }) {
                   <h4 className="text-[11px] font-black text-slate-400 uppercase tracking-widest border-b border-slate-50 pb-2 mb-6">
                     Line Items Detail
                   </h4>
-                  <div className="space-y-4">
-                    {(isEditing ? editForm.items : selectedIndent.items).map(
-                      (item, idx) => (
-                        <div
-                          key={idx}
-                          className="bg-slate-50 rounded-2xl p-5 border border-slate-200 group/item relative"
-                        >
+                  <div className="overflow-x-auto border border-slate-200 rounded-2xl shadow-sm bg-white">
+                    <table className="w-full text-left text-sm border-collapse">
+                      <thead>
+                        <tr className="bg-slate-50/50 text-slate-400 uppercase tracking-widest text-[10px] font-bold border-b border-slate-200">
+                          <th className="py-4 px-5">Line Item</th>
+                          <th className="py-4 px-5 hidden sm:table-cell">
+                            Source & Details
+                          </th>
+                          <th className="py-4 px-5 text-right w-32">Qty</th>
                           {isEditing && (
-                            <button
-                              onClick={() => {
-                                const newItems = editForm.items.filter(
-                                  (_, i) => i !== idx,
-                                );
-                                setEditForm({ ...editForm, items: newItems });
-                              }}
-                              className="absolute -top-2 -right-2 p-1.5 bg-rose-100 text-rose-600 rounded-full hover:bg-rose-600 hover:text-white transition-all shadow-md opacity-0 group-hover/item:opacity-100"
-                            >
-                              <Trash2 className="w-3.5 h-3.5" />
-                            </button>
+                            <th className="py-4 px-5 text-center w-16">Act</th>
                           )}
-                          <div className="flex justify-between items-start mb-4">
-                            <div className="flex-1">
-                              <div className="text-lg font-black text-slate-800 uppercase tracking-tight">
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-slate-100">
+                        {(isEditing
+                          ? editForm.items
+                          : selectedIndent.items
+                        ).map((item, idx) => (
+                          <tr
+                            key={idx}
+                            className="hover:bg-slate-50/50 transition-colors group/row"
+                          >
+                            <td className="py-4 px-5">
+                              <div className="text-sm font-black text-slate-800 uppercase tracking-tight">
                                 {item.itemName}
                               </div>
-                              <div className="text-xs font-medium text-slate-500 italic mt-1 bg-white/50 w-fit px-2 py-0.5 rounded-lg">
+                              <div className="text-[10px] font-medium text-slate-500 italic mt-0.5">
                                 {item.description || "System identified need"}
                               </div>
-                            </div>
-                            <div className="text-right ml-4">
+                            </td>
+                            <td className="py-4 px-5 hidden sm:table-cell">
+                              <div className="flex items-center gap-1.5 text-xs font-bold text-slate-700">
+                                <ShieldCheck className="w-3.5 h-3.5 text-indigo-500" />
+                                {item.suggestedSupplier?.name ||
+                                  "Open Sourcing"}
+                                <span className="text-[10px] text-slate-400 font-medium ml-1">
+                                  (Est: ₹{item.suggestedRate || "Market"})
+                                </span>
+                              </div>
+                              <div className="flex items-center gap-1.5 text-[10px] font-medium text-slate-500 mt-1 line-clamp-1">
+                                <Zap className="w-3 h-3 text-amber-500 shrink-0" />
+                                {item.reason ||
+                                  "Inventory fell below minimum safety threshold."}
+                              </div>
+                            </td>
+                            <td className="py-4 px-5 text-right w-32">
                               {isEditing ? (
-                                <div className="flex flex-col items-end gap-1.5">
+                                <div className="flex items-center justify-end">
                                   <input
                                     type="number"
                                     value={item.quantity}
@@ -616,53 +639,40 @@ function IndentCreation({ pageName = "Procurement" }) {
                                         items: newItems,
                                       });
                                     }}
-                                    className="w-24 px-3 py-1.5 bg-white border-2 border-slate-200 rounded-xl text-right font-black text-indigo-600 focus:border-indigo-500 outline-none transition-all shadow-sm"
+                                    className="w-20 px-2 py-1.5 bg-white border-2 border-slate-200 rounded-xl text-right font-black text-indigo-600 focus:border-indigo-500 outline-none transition-all shadow-sm"
                                   />
-                                  <div className="text-[10px] font-black text-slate-400 uppercase tracking-tighter">
-                                    Edit Qty
-                                  </div>
                                 </div>
                               ) : (
-                                <>
-                                  <div className="text-2xl font-black text-indigo-600 leading-none">
-                                    {item.quantity}
-                                  </div>
-                                  <div className="text-[10px] font-black text-slate-400 uppercase tracking-widest mt-1">
+                                <span className="text-lg font-black text-indigo-600">
+                                  {item.quantity}
+                                  <span className="text-[9px] ml-1 font-bold text-slate-400 uppercase tracking-tighter">
                                     Units
-                                  </div>
-                                </>
+                                  </span>
+                                </span>
                               )}
-                            </div>
-                          </div>
-
-                          <div className="grid grid-cols-2 gap-4 pt-4 border-t border-slate-200/60">
-                            <div className="bg-white p-4 rounded-xl border border-slate-100 shadow-sm">
-                              <div className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 flex items-center gap-1.5">
-                                <ShieldCheck className="w-3 h-3 text-indigo-500" />
-                                Preferred Source
-                              </div>
-                              <div className="text-xs font-black text-slate-800 uppercase">
-                                {item.suggestedSupplier?.name ||
-                                  "Open Sourcing"}
-                              </div>
-                              <div className="text-[10px] font-bold text-slate-500 mt-0.5">
-                                Est. Rate: ₹{item.suggestedRate || "Market"}
-                              </div>
-                            </div>
-                            <div className="bg-white p-4 rounded-xl border border-slate-100 shadow-sm">
-                              <div className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 flex items-center gap-1.5">
-                                <Zap className="w-3 h-3 text-amber-500" />
-                                Logic
-                              </div>
-                              <div className="text-[10px] font-bold text-slate-600 leading-tight line-clamp-2">
-                                {item.reason ||
-                                  "Inventory fell below minimum safety threshold."}
-                              </div>
-                            </div>
-                          </div>
-                        </div>
-                      ),
-                    )}
+                            </td>
+                            {isEditing && (
+                              <td className="py-4 px-5 text-center w-16">
+                                <button
+                                  onClick={() => {
+                                    const newItems = editForm.items.filter(
+                                      (_, i) => i !== idx,
+                                    );
+                                    setEditForm({
+                                      ...editForm,
+                                      items: newItems,
+                                    });
+                                  }}
+                                  className="p-1.5 text-rose-400 hover:text-white hover:bg-rose-500 rounded-lg transition-colors opacity-0 group-hover/row:opacity-100"
+                                >
+                                  <Trash2 className="w-4 h-4" />
+                                </button>
+                              </td>
+                            )}
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
                   </div>
                 </div>
               </div>

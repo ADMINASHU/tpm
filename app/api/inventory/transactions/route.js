@@ -244,6 +244,13 @@ export async function GET(req) {
             }
           }
 
+          let finalIsPendingIndent = isPendingIndent;
+          if (!finalIsPendingIndent && details.configId) {
+            finalIsPendingIndent = pendingConfigIds.has(
+              details.configId.toString(),
+            );
+          }
+
           return {
             ...details,
             _id: cid || fid,
@@ -251,7 +258,7 @@ export async function GET(req) {
             averageUnitCost: stat.averageUnitCost || 0,
             estimatedTotalValue:
               (stat.totalQty || 0) * (stat.averageUnitCost || 0),
-            isPendingIndent: !!isPendingIndent,
+            isPendingIndent: !!finalIsPendingIndent,
           };
         }),
       );

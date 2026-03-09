@@ -17,6 +17,9 @@ const SupplierConfig = dynamic(
   () => import("@/components/procurement/SupplierConfig"),
   { loading: () => <TabLoader /> },
 );
+const POMaster = dynamic(() => import("@/components/procurement/POMaster"), {
+  loading: () => <TabLoader />,
+});
 
 function TabLoader() {
   return (
@@ -40,13 +43,18 @@ const PAGE_HEADERS = {
     subtitle:
       "Review approved indents and generate purchase orders from vendor catalogs.",
   },
+  orders: {
+    title: "Purchase Orders",
+    subtitle:
+      "Manage, review, edit, and send generated Purchase Orders to vendors.",
+  },
   suppliers: {
     title: "Supplier Config",
     subtitle: "Manage approved vendor list, contacts, and supply categories.",
   },
 };
 
-const TABS = ["indent", "po", "suppliers"];
+const TABS = ["indent", "po", "orders", "suppliers"];
 
 function ProcurementContent() {
   const searchParams = useSearchParams();
@@ -82,6 +90,7 @@ function ProcurementContent() {
         <div className="bg-white rounded-2xl shadow-sm border border-slate-100 p-8">
           {activeTab === "indent" && <IndentCreation pageName="Procurement" />}
           {activeTab === "po" && <IndentReview pageName="Procurement" />}
+          {activeTab === "orders" && <POMaster pageName="Procurement" />}
           {activeTab === "suppliers" && (
             <SupplierConfig pageName="Procurement" />
           )}

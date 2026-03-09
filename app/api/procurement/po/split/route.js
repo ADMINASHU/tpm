@@ -5,6 +5,7 @@ import dbConnect from "@/lib/db";
 import Indent from "@/lib/models/Indent";
 import Supplier from "@/lib/models/Supplier";
 import PurchaseOrder from "@/lib/models/PurchaseOrder";
+import Factory from "@/lib/models/Factory";
 
 export async function POST(req) {
   try {
@@ -14,9 +15,17 @@ export async function POST(req) {
 
     const { factoryId } = session.user;
     const body = await req.json();
-    const { indentId } = body;
+    const { indentId, storeName } = body;
 
     await dbConnect();
+
+    const factory = await Factory.findById(factoryId);
+    if (!factory) {
+      return NextResponse.json({ error: "Factory not found" }, { status: 404 });
+    }
+
+    const selectedStore = factory.stores?.find((s) => s.name === storeName);
+    const deliveryAddress = selectedStore?.address || factory.location;
 
     const indent = await Indent.findOne({ _id: indentId, factoryId }).populate(
       "items.suggestedSupplier",
@@ -123,6 +132,11 @@ export async function POST(req) {
         items: groupData.items,
         totalAmount: groupData.totalAmount,
         factoryId,
+        factoryName: factory.name,
+        factoryBillingAddress: factory.billingAddress,
+        factoryGstNumber: factory.gstNumber,
+        deliveryAddress: deliveryAddress,
+        deliveryStoreName: storeName,
       });
       generatedPOs.push(newPo);
       index++;

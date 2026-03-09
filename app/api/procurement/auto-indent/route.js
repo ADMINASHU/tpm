@@ -145,7 +145,7 @@ export async function POST(req) {
         indentNumber: `IND-AUTO-${Date.now()}`,
         indentType: "Auto",
         requestedBy: userId,
-        department: "Store/Production",
+        department: "Store",
         items: allIndentItems,
         status: "Approval Pending",
         factoryId,
