@@ -5,9 +5,18 @@ import { useSearchParams } from "next/navigation";
 import dynamic from "next/dynamic";
 import Breadcrumb from "@/components/Breadcrumb";
 
-const IndentCreation = dynamic(() => import("@/components/procurement/IndentCreation"), { loading: () => <TabLoader /> });
-const POApproval = dynamic(() => import("@/components/procurement/POApproval"), { loading: () => <TabLoader /> });
-const SupplierConfig = dynamic(() => import("@/components/procurement/SupplierConfig"), { loading: () => <TabLoader /> });
+const IndentCreation = dynamic(
+  () => import("@/components/procurement/IndentCreation"),
+  { loading: () => <TabLoader /> },
+);
+const IndentReview = dynamic(
+  () => import("@/components/procurement/IndentReview"),
+  { loading: () => <TabLoader /> },
+);
+const SupplierConfig = dynamic(
+  () => import("@/components/procurement/SupplierConfig"),
+  { loading: () => <TabLoader /> },
+);
 
 function TabLoader() {
   return (
@@ -21,9 +30,20 @@ function TabLoader() {
 }
 
 const PAGE_HEADERS = {
-  indent: { title: "Create Indent", subtitle: "Raise material requisitions for components reaching minimum buffer levels." },
-  po: { title: "PO Gen & Approvals", subtitle: "Review approved indents and generate purchase orders from vendor catalogs." },
-  suppliers: { title: "Supplier Config", subtitle: "Manage approved vendor list, contacts, and supply categories." },
+  indent: {
+    title: "Create Indent",
+    subtitle:
+      "Raise material requisitions for components reaching minimum buffer levels.",
+  },
+  po: {
+    title: "PO Gen & Approvals",
+    subtitle:
+      "Review approved indents and generate purchase orders from vendor catalogs.",
+  },
+  suppliers: {
+    title: "Supplier Config",
+    subtitle: "Manage approved vendor list, contacts, and supply categories.",
+  },
 };
 
 const TABS = ["indent", "po", "suppliers"];
@@ -42,17 +62,17 @@ function ProcurementContent() {
   return (
     <div className="flex-1 p-8">
       <div className="max-w-[1600px] mx-auto space-y-8">
-
         {/* Tab switcher — mobile only */}
         <div className="md:hidden flex flex-wrap gap-1 p-1 bg-slate-200/50 rounded-xl w-fit">
           {TABS.map((tabKey) => (
             <button
               key={tabKey}
               onClick={() => setActiveTab(tabKey)}
-              className={`px-4 py-2 text-sm font-semibold rounded-lg transition-all ${activeTab === tabKey
-                ? "bg-white text-indigo-700 shadow-sm ring-1 ring-slate-200"
-                : "text-slate-500 hover:text-slate-700 hover:bg-slate-200/50"
-                }`}
+              className={`px-4 py-2 text-sm font-semibold rounded-lg transition-all ${
+                activeTab === tabKey
+                  ? "bg-white text-indigo-700 shadow-sm ring-1 ring-slate-200"
+                  : "text-slate-500 hover:text-slate-700 hover:bg-slate-200/50"
+              }`}
             >
               {PAGE_HEADERS[tabKey].title}
             </button>
@@ -61,8 +81,10 @@ function ProcurementContent() {
 
         <div className="bg-white rounded-2xl shadow-sm border border-slate-100 p-8">
           {activeTab === "indent" && <IndentCreation pageName="Procurement" />}
-          {activeTab === "po" && <POApproval pageName="Procurement" />}
-          {activeTab === "suppliers" && <SupplierConfig pageName="Procurement" />}
+          {activeTab === "po" && <IndentReview pageName="Procurement" />}
+          {activeTab === "suppliers" && (
+            <SupplierConfig pageName="Procurement" />
+          )}
         </div>
       </div>
     </div>

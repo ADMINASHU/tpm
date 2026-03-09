@@ -16,8 +16,10 @@ import { getISODateIST } from "@/lib/dateUtils";
 function StockOverview({ pageName = "Inventory" }) {
   const [items, setItems] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [searchTerm, setSearchTerm] = useState("");
   const [groupByMake, setGroupByMake] = useState(false);
+  const [message, setMessage] = useState({ type: "", text: "" });
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [searchTerm, setSearchTerm] = useState("");
 
   const fetchStock = async () => {
     setIsLoading(true);
@@ -131,6 +133,7 @@ function StockOverview({ pageName = "Inventory" }) {
               )}
               <th className="py-4 px-6 text-right">Qty Available</th>
               <th className="py-4 px-6 text-right">Est. Total Value</th>
+              {!groupByMake && <th className="py-4 px-6 text-right">Action</th>}
             </tr>
           </thead>
           <tbody className="divide-y divide-slate-50">
@@ -261,6 +264,83 @@ function StockOverview({ pageName = "Inventory" }) {
                           maximumFractionDigits: 2,
                         })}
                       </span>
+                    </td>
+                    <td className="py-4 px-6 text-right">
+                      <div className="flex justify-end items-center gap-2">
+                        {item.isPendingIndent ? (
+                          <span className="inline-flex items-center gap-1 px-2 py-1 rounded-lg bg-amber-50 text-amber-700 text-[10px] font-bold border border-amber-200">
+                            <AlertCircle className="w-3 h-3" />
+                            In Indent
+                          </span>
+                        ) : (
+                          qty < (item.minStockLevel || 0) && (
+                            <button
+                              disabled={isSubmitting}
+                              onClick={async () => {
+                                setIsSubmitting(true);
+                                try {
+                                  const reqQty = Math.max(
+                                    1,
+                                    (item.maxStockLevel ||
+                                      item.minStockLevel ||
+                                      qty + 1) - qty,
+                                  );
+                                  const res = await fetch(
+                                    "/api/procurement/indents",
+                                    {
+                                      method: "POST",
+                                      headers: {
+                                        "Content-Type": "application/json",
+                                      },
+                                      body: JSON.stringify({
+                                        department: "Store", // Mandatory enum: Production, Store, Projects
+                                        items: [
+                                          {
+                                            configId: item.configId,
+                                            configModel: item.configModel,
+                                            itemName: item.itemName,
+                                            itemCode: item.itemCode,
+                                            quantity: reqQty,
+                                            uom: item.baseUom,
+                                            category: item.category,
+                                            make:
+                                              item.make || item.productRatings,
+                                          },
+                                        ],
+                                      }),
+                                    },
+                                  );
+                                  const data = await res.json();
+                                  if (res.ok) {
+                                    setMessage({
+                                      type: "success",
+                                      text: `Added ${reqQty} units of ${item.itemName} to indent.`,
+                                    });
+                                    fetchStock();
+                                  } else {
+                                    setMessage({
+                                      type: "error",
+                                      text: data.error || "Failed to add",
+                                    });
+                                  }
+                                } catch (e) {
+                                  console.error("Error adding to indent:", e);
+                                  setMessage({
+                                    type: "error",
+                                    text: "Connection error",
+                                  });
+                                } finally {
+                                  setIsSubmitting(false);
+                                }
+                              }}
+                              className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-indigo-600 text-white text-[10px] font-bold rounded-lg hover:bg-indigo-700 transition-colors shadow-sm disabled:opacity-50"
+                            >
+                              <Plus className="w-3.5 h-3.5" />
+                              Add to Indent
+                            </button>
+                          )
+                        )}
+                      </div>
                     </td>
                   </tr>
                 );
